@@ -430,13 +430,14 @@
         <div class="actions">
           <a class="btn btn-x" id="shareBtn" href="#" target="_blank" rel="noopener">𝕏 でシェアする</a>
           <button class="btn btn-again" id="againBtn">🔄 もう一回充電する</button>
+          <a class="btn" style="background:linear-gradient(135deg,var(--mei),var(--mei-light));color:#fff;" href="https://fuyutosan.github.io/meimei/">🏠 メイメイのお家へ</a>
         </div>
       </div>
     </div>
   </div>
 
   <footer>
-    🐼 メイメイ（<a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a>）の充電器 💚
+    🐼 <a href="https://fuyutosan.github.io/meimei/">メイメイのお家</a> ｜ <a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a> 💚
   </footer>
 
   <script>
@@ -610,7 +611,8 @@
       messageEl.textContent = msg;
 
       // シェアリンク組み立て
-      const text = 'パンダさんパワー充電したよ！⚡🐼 @meimei_pandasan\n「' + msg + '」\n#パンダさんパワー';
+      const playUrl = 'https://fuyutosan.github.io/panda-charger/';
+      const text = 'パンダさんパワー充電完了！⚡🐼\n「' + msg + '」\nきみも充電してみてね👉 ' + playUrl + '\n@meimei_pandasan #パンダさんパワー';
       shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
 
       burstSparkles();
