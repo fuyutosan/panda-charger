@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>パンダさんパワー充電器 🔋🐼</title>
+
+  <!-- OGP -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="パンダさんパワー充電器 🔋🐼">
+  <meta property="og:description" content="ボタンを押して、パンダさんパワーを充電しよう！満タンになったら今日のメッセージが届くよ💚">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@meimei_pandasan">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --mei: #079C15;
+      --mei-light: #00C853;
+      --mei-pale: #90EE90;
+      --ink: #2a2a2a;
+      --paper: #FAFAF5;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
+      touch-action: manipulation;
+      position: relative;
+    }
+
+    /* パンダタイル背景 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url('__PANDA_FACE__');
+      background-size: 70px;
+      background-repeat: repeat;
+      opacity: 0.05;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* オーロラ風グラデ */
+    @keyframes auroraShift {
+      0%   { transform: translate(0px, 0px) scale(1); }
+      33%  { transform: translate(40px, -30px) scale(1.08); }
+      66%  { transform: translate(-30px, 40px) scale(0.95); }
+      100% { transform: translate(25px, 15px) scale(1.04); }
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: -20%;
+      background:
+        radial-gradient(ellipse 70% 55% at 15% 15%, rgba(7,156,21,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 70% at 85% 85%, rgba(0,200,83,0.13) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 45% at 55% 45%, rgba(144,238,144,0.10) 0%, transparent 50%);
+      animation: auroraShift 18s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      margin-top: auto;
+    }
+
+    h1 {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.4rem, 6vw, 2rem);
+      color: var(--mei);
+      letter-spacing: 0.02em;
+      margin-bottom: 4px;
+      text-shadow: 0 2px 0 rgba(255,255,255,0.7);
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #4a6a4a;
+      margin-bottom: 22px;
+    }
+
+    /* メインカード（グラスモーフィズム） */
+    .card {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(255,255,255,0.8);
+      border-radius: 28px;
+      box-shadow: 0 12px 40px rgba(7,156,21,0.18);
+      padding: 28px 24px 30px;
+    }
+
+    /* パンダさん表示エリア */
+    .panda-stage {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .panda-stage img {
+      max-height: 100%;
+      max-width: 70%;
+      image-rendering: -webkit-optimize-contrast;
+      filter: drop-shadow(0 8px 14px rgba(7,156,21,0.22));
+    }
+
+    /* 充電中のぷるぷる */
+    @keyframes wobble {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      25%      { transform: translateY(-8px) rotate(2deg); }
+      50%      { transform: translateY(0) rotate(3deg); }
+      75%      { transform: translateY(-5px) rotate(-2deg); }
+    }
+    .charging .panda-body { animation: wobble 0.7s ease-in-out infinite; }
+
+    /* 待機中のゆらゆら */
+    @keyframes idleFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-9px); }
+    }
+    .panda-body { animation: idleFloat 3s ease-in-out infinite; }
+
+    /* 完了のぼよーん登場 */
+    @keyframes popIn {
+      0%   { transform: scale(0.2) rotate(-20deg); opacity: 0; }
+      60%  { transform: scale(1.18) rotate(8deg); opacity: 1; }
+      80%  { transform: scale(0.95) rotate(-4deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    @keyframes faceBounce {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+    .panda-face {
+      display: none;
+    }
+    .complete .panda-face { display: block; animation: popIn 0.7s cubic-bezier(.2,1.4,.4,1) both, faceBounce 2.2s ease-in-out 0.7s infinite; }
+    .complete .panda-body { display: none; }
+
+    .hidden { display: none !important; }
+
+    /* バッテリー */
+    .battery {
+      margin: 10px auto 6px;
+      width: 100%;
+      max-width: 300px;
+      height: 38px;
+      border-radius: 14px;
+      border: 3px solid var(--mei);
+      background: rgba(255,255,255,0.6);
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+    }
+    /* 電池の+端子 */
+    .battery::after {
+      content: '';
+      position: absolute;
+      right: -10px; top: 50%;
+      transform: translateY(-50%);
+      width: 8px; height: 16px;
+      background: var(--mei);
+      border-radius: 0 4px 4px 0;
+    }
+    .battery-fill {
+      height: 100%;
+      width: 0%;
+      background: repeating-linear-gradient(
+        45deg,
+        var(--mei) 0 14px,
+        var(--mei-light) 14px 28px
+      );
+      background-size: 200% 100%;
+      transition: width 0.2s linear;
+      border-radius: 9px;
+      animation: stripeMove 0.8s linear infinite;
+    }
+    @keyframes stripeMove {
+      from { background-position: 0 0; }
+      to   { background-position: 40px 0; }
+    }
+    .battery-pct {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: 2.2rem;
+      color: var(--mei);
+      line-height: 1;
+      margin: 6px 0 2px;
+      text-shadow: 0 2px 0 rgba(255,255,255,0.7);
+    }
+    .status-text {
+      font-size: 0.9rem;
+      color: #4a6a4a;
+      min-height: 1.3em;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    /* 充電ボタン */
+    .charge-btn {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 900;
+      font-size: 1.25rem;
+      color: #fff;
+      background: linear-gradient(135deg, var(--mei) 0%, var(--mei-light) 100%);
+      border: none;
+      border-radius: 50%;
+      width: 150px;
+      height: 150px;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      box-shadow: 0 10px 24px rgba(7,156,21,0.4), inset 0 -6px 12px rgba(0,0,0,0.15), inset 0 4px 10px rgba(255,255,255,0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+      line-height: 1.2;
+      animation: btnPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes btnPulse {
+      0%, 100% { box-shadow: 0 10px 24px rgba(7,156,21,0.4), inset 0 -6px 12px rgba(0,0,0,0.15), inset 0 4px 10px rgba(255,255,255,0.35); }
+      50%      { box-shadow: 0 10px 34px rgba(7,156,21,0.6), inset 0 -6px 12px rgba(0,0,0,0.15), inset 0 4px 10px rgba(255,255,255,0.35); }
+    }
+    .charge-btn .bolt { font-size: 2.2rem; }
+    .charge-btn:active { transform: scale(0.93); }
+    .charge-btn:disabled { opacity: 0.55; cursor: default; animation: none; }
+
+    /* 連打モード */
+    .charge-btn.rapid { animation: rapidBlink 0.36s steps(1) infinite; }
+    @keyframes rapidBlink {
+      0%   { background: linear-gradient(135deg, #079C15, #00C853); }
+      50%  { background: linear-gradient(135deg, #00C853, #9CFF57); }
+    }
+    .charge-btn.hit { animation: hitPop 0.12s ease; }
+    @keyframes hitPop {
+      0%   { transform: scale(0.88); filter: brightness(1.9); }
+      55%  { transform: scale(1.07); filter: brightness(1.3); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    .charge-btn.hot {
+      background: linear-gradient(135deg, #ff7a00, #ff2d2d) !important;
+      box-shadow: 0 0 32px rgba(255,80,0,0.75), 0 10px 24px rgba(255,0,0,0.4) !important;
+    }
+    .charge-btn.hot.rapid { animation: hotBlink 0.22s steps(1) infinite; }
+    @keyframes hotBlink {
+      0% { filter: brightness(1); } 50% { filter: brightness(1.7); }
+    }
+
+    /* コンボ表示 */
+    .combo {
+      height: 28px; margin-top: 12px;
+      font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.4rem;
+      color: #ff7a00; opacity: 0; transition: opacity 0.2s ease;
+      text-shadow: 0 2px 0 rgba(255,255,255,0.6);
+    }
+    .combo.show { opacity: 1; }
+    .combo.pump { animation: comboPump 0.18s ease; }
+    @keyframes comboPump {
+      0% { transform: scale(1); } 50% { transform: scale(1.35); } 100% { transform: scale(1); }
+    }
+
+    /* 連打エフェクト（位置はJS、動きはWeb Animations） */
+    .shock {
+      position: fixed; border: 5px solid rgba(7,156,21,0.7); border-radius: 50%;
+      pointer-events: none; z-index: 40; will-change: transform, opacity;
+    }
+    .spark-hit {
+      position: fixed; pointer-events: none; z-index: 45; will-change: transform, opacity;
+    }
+    .floattext {
+      position: fixed; pointer-events: none; z-index: 46;
+      font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.3rem;
+      color: var(--mei); text-shadow: 0 2px 0 rgba(255,255,255,0.7); will-change: transform, opacity;
+    }
+
+    /* 完了メッセージ */
+    .result {
+      display: none;
+      margin-top: 18px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .complete .result { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .done-title {
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--mei);
+      margin-bottom: 12px;
+    }
+    .msg-card {
+      background: linear-gradient(135deg, rgba(7,156,21,0.10), rgba(0,200,83,0.06));
+      border: 2px dashed var(--mei);
+      border-radius: 18px;
+      padding: 16px 18px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1f5a26;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .msg-label {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 900;
+      color: #fff;
+      background: var(--mei);
+      border-radius: 999px;
+      padding: 3px 12px;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: 999px;
+      padding: 13px 20px;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s ease, opacity 0.1s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-x {
+      background: #000;
+      color: #fff;
+    }
+    .btn-again {
+      background: rgba(255,255,255,0.7);
+      color: var(--mei);
+      border: 2px solid var(--mei);
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      margin-top: 20px;
+      margin-bottom: auto;
+      font-size: 0.75rem;
+      color: #6a8a6a;
+    }
+    footer a { color: var(--mei); font-weight: 700; text-decoration: none; }
+
+    /* キラキラ紙吹雪 */
+    .spark {
+      position: fixed;
+      top: -20px;
+      font-size: 1.4rem;
+      pointer-events: none;
+      z-index: 50;
+      will-change: transform, opacity;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(540deg); opacity: 0; }
+    }
+
+    @media (max-width: 380px) {
+      .panda-stage { height: 160px; }
+      .charge-btn { width: 130px; height: 130px; font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <h1>🔋 パンダさんパワー充電器</h1>
+    <p class="subtitle">ボタンを連打して、パンダさんパワーを充電しよう！🔥🐼</p>
+
+    <div class="card" id="card">
+      <div class="panda-stage">
+        <img class="panda-body" src="__PANDA_BODY__" alt="充電中のパンダさん">
+        <img class="panda-face" src="__PANDA_FACE__" alt="満タンのパンダさん">
+      </div>
+
+      <div class="battery">
+        <div class="battery-fill" id="fill"></div>
+      </div>
+      <div class="battery-pct" id="pct">0%</div>
+      <div class="status-text" id="status">ボタンを押して連打スタート！⚡</div>
+
+      <button class="charge-btn" id="chargeBtn">
+        <span class="bolt" id="btnIcon">⚡</span>
+        <span class="label" id="btnLabel">充電する</span>
+      </button>
+      <div class="combo" id="combo"></div>
+
+      <div class="result" id="result">
+        <div class="done-title">🎉 充電完了！パンダさんパワー満タン！🐼</div>
+        <div class="msg-card">
+          <span class="msg-label">今日のパンダさんパワー</span><br>
+          <span id="message">―</span>
+        </div>
+        <div class="actions">
+          <a class="btn btn-x" id="shareBtn" href="#" target="_blank" rel="noopener">𝕏 でシェアする</a>
+          <button class="btn btn-again" id="againBtn">🔄 もう一回充電する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    🐼 メイメイ（<a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a>）の充電器 💚
+  </footer>
+
+  <script>
+    const messages = [
+      "きみは今日もよくがんばってるよ🐼",
+      "むりせず、ゆっくりでいいんだよ💚",
+      "パンダさんパワー満タン！どんと来い⚡",
+      "笹を食べるみたいに、休むのも大事🎋",
+      "きみのペースが、いちばん正しいよ🐾",
+      "深呼吸ひとつで、世界はやさしくなる🌿",
+      "今日のきみに、まんまるはなまる💮",
+      "ころんでも、ぱんだはまた立ち上がる🐼",
+      "ちいさな一歩も、ちゃんと前進だよ✨",
+      "パワー充電完了！いってらっしゃい🍀"
+    ];
+
+    const card = document.getElementById('card');
+    const fill = document.getElementById('fill');
+    const pct = document.getElementById('pct');
+    const status = document.getElementById('status');
+    const chargeBtn = document.getElementById('chargeBtn');
+    const result = document.getElementById('result');
+    const messageEl = document.getElementById('message');
+    const shareBtn = document.getElementById('shareBtn');
+    const againBtn = document.getElementById('againBtn');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnLabel = document.getElementById('btnLabel');
+    const comboEl = document.getElementById('combo');
+
+    let mode = 'idle';        // idle | rapid | complete
+    let percent = 0;
+    let combo = 0;
+    let lastTap = 0;
+    let comboResetTimer = null;
+
+    function setPercent(p) {
+      percent = Math.max(0, Math.min(100, p));
+      fill.style.width = percent + '%';
+      pct.textContent = Math.round(percent) + '%';
+    }
+
+    function enterRapid() {
+      mode = 'rapid';
+      card.classList.remove('complete');
+      card.classList.add('charging');
+      chargeBtn.classList.add('rapid');
+      btnIcon.textContent = '🔥';
+      btnLabel.textContent = 'れんだ！';
+      status.textContent = 'れんだ！れんだ！🔥';
+    }
+
+    function onTap(e) {
+      if (e) e.preventDefault();
+      if (mode === 'complete') return;
+      if (mode === 'idle') enterRapid();
+      registerTap();
+    }
+
+    function registerTap() {
+      const now = performance.now();
+      const dt = now - lastTap;
+      lastTap = now;
+      combo = (dt < 350) ? combo + 1 : 1;
+
+      // 速く連打するほど上昇量UP（+3% 〜 最大+8%）
+      const gain = Math.min(8, 3 + Math.floor(combo / 2));
+      setPercent(percent + gain);
+
+      // ボタン震え（連続発火のためリフローで再生）
+      chargeBtn.classList.remove('hit');
+      void chargeBtn.offsetWidth;
+      chargeBtn.classList.add('hit');
+
+      // 満タン手前で赤熱
+      chargeBtn.classList.toggle('hot', percent >= 70);
+
+      // コンボ表示
+      if (combo >= 2) {
+        comboEl.textContent = '🔥 ' + combo + ' コンボ！';
+        comboEl.classList.add('show');
+        comboEl.classList.remove('pump');
+        void comboEl.offsetWidth;
+        comboEl.classList.add('pump');
+      }
+      clearTimeout(comboResetTimer);
+      comboResetTimer = setTimeout(() => {
+        combo = 0;
+        comboEl.classList.remove('show');
+      }, 900);
+
+      // 爆発エフェクト
+      const r = chargeBtn.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      spawnShock(cx, cy);
+      spawnSparks(cx, cy);
+      floatGain(cx, r.top + 6, '+' + gain + '%');
+
+      if (percent >= 100) finishCharge();
+    }
+
+    function spawnShock(x, y) {
+      const s = document.createElement('div');
+      s.className = 'shock';
+      s.style.left = x + 'px';
+      s.style.top = y + 'px';
+      s.style.width = '220px';
+      s.style.height = '220px';
+      if (percent >= 70) s.style.borderColor = 'rgba(255,90,0,0.7)';
+      document.body.appendChild(s);
+      s.animate([
+        { transform: 'translate(-50%,-50%) scale(0.12)', opacity: 0.85 },
+        { transform: 'translate(-50%,-50%) scale(1)', opacity: 0 }
+      ], { duration: 470, easing: 'cubic-bezier(.2,.7,.3,1)' });
+      setTimeout(() => s.remove(), 500);
+    }
+
+    function spawnSparks(x, y) {
+      const emojis = ['⚡', '💥', '🔥', '✨', '🌟'];
+      for (let i = 0; i < 4; i++) {
+        const sp = document.createElement('div');
+        sp.className = 'spark-hit';
+        sp.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        sp.style.left = x + 'px';
+        sp.style.top = y + 'px';
+        sp.style.fontSize = (0.9 + Math.random() * 0.9) + 'rem';
+        document.body.appendChild(sp);
+        const ang = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 70;
+        const dx = Math.cos(ang) * dist;
+        const dy = Math.sin(ang) * dist - 20;
+        const rot = Math.random() * 180 - 90;
+        sp.animate([
+          { transform: 'translate(-50%,-50%) scale(0.5)', opacity: 1 },
+          { transform: 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px)) scale(1.2) rotate(' + rot + 'deg)', opacity: 0 }
+        ], { duration: 520 + Math.random() * 250, easing: 'cubic-bezier(.2,.8,.3,1)' });
+        setTimeout(() => sp.remove(), 800);
+      }
+    }
+
+    function floatGain(x, y, text) {
+      const f = document.createElement('div');
+      f.className = 'floattext';
+      f.textContent = text;
+      f.style.left = x + 'px';
+      f.style.top = y + 'px';
+      if (percent >= 70) f.style.color = '#ff5a00';
+      document.body.appendChild(f);
+      f.animate([
+        { transform: 'translate(-50%,0) scale(0.8)', opacity: 1 },
+        { transform: 'translate(-50%,-72px) scale(1.25)', opacity: 0 }
+      ], { duration: 650, easing: 'ease-out' });
+      setTimeout(() => f.remove(), 700);
+    }
+
+    function finishCharge() {
+      mode = 'complete';
+      clearTimeout(comboResetTimer);
+      combo = 0;
+      comboEl.classList.remove('show');
+      card.classList.remove('charging');
+      card.classList.add('complete');
+      chargeBtn.classList.remove('rapid', 'hot', 'hit');
+      chargeBtn.disabled = true;
+      btnIcon.textContent = '⚡';
+      btnLabel.textContent = '充電する';
+      status.textContent = 'パワー満タンになったよ！🐼';
+
+      // 今日のメッセージ（充電するたびランダム）
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      messageEl.textContent = msg;
+
+      // シェアリンク組み立て
+      const text = 'パンダさんパワー充電したよ！⚡🐼 @meimei_pandasan\n「' + msg + '」\n#パンダさんパワー';
+      shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+
+      burstSparkles();
+    }
+
+    function resetCharge() {
+      mode = 'idle';
+      card.classList.remove('complete', 'charging');
+      chargeBtn.classList.remove('rapid', 'hot', 'hit');
+      chargeBtn.disabled = false;
+      btnIcon.textContent = '⚡';
+      btnLabel.textContent = '充電する';
+      combo = 0;
+      lastTap = 0;
+      comboEl.classList.remove('show');
+      comboEl.textContent = '';
+      setPercent(0);
+      status.textContent = 'ボタンを押して連打スタート！⚡';
+    }
+
+    function burstSparkles() {
+      const emojis = ['✨', '🐼', '💚', '⚡', '🎉', '🌟', '🍀'];
+      const count = 28;
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement('div');
+        s.className = 'spark';
+        s.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        s.style.left = Math.random() * 100 + 'vw';
+        const dur = 2 + Math.random() * 2;
+        s.style.animation = 'fall ' + dur + 's linear ' + (Math.random() * 0.6) + 's forwards';
+        s.style.fontSize = (1 + Math.random() * 1.4) + 'rem';
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), (dur + 1) * 1000);
+      }
+    }
+
+    chargeBtn.addEventListener('pointerdown', onTap);
+    againBtn.addEventListener('click', resetCharge);
+
+    setPercent(0);
+  </script>
+</body>
+</html>
