@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>パンダさんパワー充電器 🔋🐼</title>
 
   <!-- OGP -->
@@ -649,6 +649,11 @@
 
     chargeBtn.addEventListener('pointerdown', onTap);
     againBtn.addEventListener('click', resetCharge);
+
+    // ピンチズーム抑止（アプリ内ブラウザ・Safari対策。ダブルタップズームはviewport設定で無効化）
+    ['gesturestart','gesturechange','gestureend'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
+    });
 
     setPercent(0);
   </script>
