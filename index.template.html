@@ -421,8 +421,13 @@
       </button>
       <div class="combo" id="combo"></div>
 
+      <div id="totalPower" style="margin:16px auto 0;padding:12px 18px;max-width:440px;background:rgba(7,156,21,0.08);border:2px solid var(--mei);border-radius:18px;color:var(--mei);font-weight:800;line-height:1.7;text-align:center;font-size:1.02rem;">
+        🔋 みんなで充電したパンダさんパワー<br>
+        累計 <span id="totalPowerNum" style="font-size:1.6em;letter-spacing:0.02em;">…</span> パワー！
+      </div>
+
       <div class="result" id="result">
-        <div class="done-title">🎉 充電完了！パンダさんパワー満タン！🐼</div>
+        <div class="done-title">🎉充電完了🔋パンダさんパワーMAX🐼🔥</div>
         <div class="msg-card">
           <span class="msg-label">今日のパンダさんパワー</span><br>
           <span id="message">―</span>
@@ -466,6 +471,32 @@
     const btnIcon = document.getElementById('btnIcon');
     const btnLabel = document.getElementById('btnLabel');
     const comboEl = document.getElementById('combo');
+    const totalPowerNum = document.getElementById('totalPowerNum');
+
+    // みんなの累計パワー（無料カウンターAPI / 失敗してもページは壊さない）
+    const POWER_GET = 'https://abacus.jasoncameron.dev/get/meimei-panda-charger/power';
+    const POWER_HIT = 'https://abacus.jasoncameron.dev/hit/meimei-panda-charger/power';
+
+    function renderTotalPower(n) {
+      if (totalPowerNum && typeof n === 'number') {
+        totalPowerNum.textContent = n.toLocaleString('ja-JP');
+      }
+    }
+    async function loadTotalPower() {
+      try {
+        const res = await fetch(POWER_GET);
+        const data = await res.json();
+        renderTotalPower(data.value);
+      } catch (e) { /* 取得失敗：そのまま … 表示でOK */ }
+    }
+    async function addTotalPower() {
+      try {
+        const res = await fetch(POWER_HIT);
+        const data = await res.json();
+        renderTotalPower(data.value);
+      } catch (e) { /* 加算失敗：無視（次回読込で反映される） */ }
+    }
+    loadTotalPower();
 
     let mode = 'idle';        // idle | rapid | complete
     let percent = 0;
@@ -605,6 +636,7 @@
       btnIcon.textContent = '⚡';
       btnLabel.textContent = '充電する';
       status.textContent = 'パワー満タンになったよ！🐼';
+      addTotalPower(); // みんなの累計パワー +1（完了時に1回だけ）
 
       // 今日のメッセージ（充電するたびランダム）
       const msg = messages[Math.floor(Math.random() * messages.length)];
