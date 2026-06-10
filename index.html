@@ -494,7 +494,8 @@
         const res = await fetch(POWER_HIT);
         const data = await res.json();
         renderTotalPower(data.value);
-      } catch (e) { /* 加算失敗：無視（次回読込で反映される） */ }
+        return data.value;
+      } catch (e) { return null; }
     }
     loadTotalPower();
 
@@ -636,16 +637,23 @@
       btnIcon.textContent = '⚡';
       btnLabel.textContent = '充電する';
       status.textContent = 'パワー満タンになったよ！🐼';
-      addTotalPower(); // みんなの累計パワー +1（完了時に1回だけ）
-
       // 今日のメッセージ（充電するたびランダム）
       const msg = messages[Math.floor(Math.random() * messages.length)];
       messageEl.textContent = msg;
 
       // シェアリンク組み立て
       const playUrl = 'https://fuyutosan.github.io/panda-charger/';
-      const text = 'パンダさんパワー充電完了！⚡🐼\n「' + msg + '」\nきみも充電してみてね👉 ' + playUrl + '\n@meimei_pandasan #パンダさんパワー';
-      shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+      const buildShareText = (total) => {
+        if (total) {
+          return `パンダさんパワー充電完了！⚡🐼\n「${msg}」\nみんなで${total.toLocaleString('ja-JP')}のパンダさんパワーを充電したよ🐼🔋⚡\nもっと充電して世界中をパンダさんパワーでパンパンパンダさんにしよう🐼🌏\n👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
+        }
+        return `パンダさんパワー充電完了！⚡🐼\n「${msg}」\nきみも充電してみてね👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
+      };
+      shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(buildShareText(null));
+      // みんなの累計パワー +1（完了時に1回だけ）→ 完了後シェアテキストに累計を反映
+      addTotalPower().then(total => {
+        shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(buildShareText(total));
+      });
 
       burstSparkles();
     }
