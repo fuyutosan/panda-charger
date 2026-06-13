@@ -399,6 +399,33 @@
       .panda-stage { height: 160px; }
       .charge-btn { width: 130px; height: 130px; font-size: 1.1rem; }
     }
+
+    /* 節目のお祝いバナー */
+    .milestone-banner {
+      position: fixed;
+      left: 50%;
+      top: 22%;
+      z-index: 60;
+      background: linear-gradient(135deg, var(--mei), var(--mei-light));
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.25rem;
+      padding: 18px 26px;
+      border-radius: 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    .milestone-banner.show { animation: popMilestone 2.8s ease forwards; }
+    @keyframes popMilestone {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+      12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+      20%  { transform: translate(-50%, -50%) scale(1); }
+      82%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -432,7 +459,7 @@
       <div class="result" id="result">
         <div class="done-title">🎉充電完了🔋パンダさんパワーMAX🐼🔥</div>
         <div class="msg-card">
-          <span class="msg-label">今日のパンダさんパワー</span><br>
+          <span class="msg-label">🐼 今日のパンダさんパワー</span><br>
           <span id="message">―</span>
         </div>
         <div class="actions">
@@ -497,7 +524,8 @@
         const res = await fetch(POWER_HIT);
         const data = await res.json();
         renderTotalPower(data.value);
-      } catch (e) { /* 加算失敗：無視（次回読込で反映される） */ }
+        return data.value;
+      } catch (e) { return null; }
     }
     loadTotalPower();
 
@@ -639,16 +667,24 @@
       btnIcon.textContent = '⚡';
       btnLabel.textContent = '充電する';
       status.textContent = 'パワー満タンになったよ！🐼';
-      addTotalPower(); // みんなの累計パワー +1（完了時に1回だけ）
-
       // 今日のメッセージ（充電するたびランダム）
       const msg = messages[Math.floor(Math.random() * messages.length)];
       messageEl.textContent = msg;
 
       // シェアリンク組み立て
       const playUrl = 'https://fuyutosan.github.io/panda-charger/';
-      const text = 'パンダさんパワー充電完了！⚡🐼\n「' + msg + '」\nきみも充電してみてね👉 ' + playUrl + '\n@meimei_pandasan #パンダさんパワー';
-      shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+      const buildShareText = (total) => {
+        if (total) {
+          return `パンダさんパワー充電完了！⚡🐼\n「${msg}」\nみんなで${total.toLocaleString('ja-JP')}のパンダさんパワーを充電したよ🐼🔋⚡\nもっと充電して世界中をパンダさんパワーでパンパンパンダさんにしよう🐼🌏\n👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
+        }
+        return `パンダさんパワー充電完了！⚡🐼\n「${msg}」\nきみも充電してみてね👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
+      };
+      shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(buildShareText(null));
+      // みんなの累計パワー +1（完了時に1回だけ）→ 完了後シェアテキストに累計を反映
+      addTotalPower().then(total => {
+        shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(buildShareText(total));
+        if (isMilestone(total)) celebrateMilestone(total);
+      });
 
       burstSparkles();
     }
@@ -669,7 +705,7 @@
     }
 
     function burstSparkles() {
-      const emojis = ['✨', '🐼', '💚', '⚡', '🎉', '🌟', '🍀'];
+      const emojis = ['✨', '🐼', '💚', '⚡', '🎉', '🌟', '🍀', '🍬', '🍭', '🍪'];
       const count = 28;
       for (let i = 0; i < count; i++) {
         const s = document.createElement('div');
@@ -682,6 +718,36 @@
         document.body.appendChild(s);
         setTimeout(() => s.remove(), (dur + 1) * 1000);
       }
+    }
+
+    // 節目（100・500・1000…）のときだけ、お菓子をたくさん降らせてお祝い
+    function isMilestone(n) {
+      if (typeof n !== 'number') return false;
+      return n === 100 || n === 500 || (n > 0 && n % 1000 === 0);
+    }
+    function sweetsRain() {
+      const sweets = ['🍬', '🍭', '🍪', '🧁', '🍩', '🍫', '🍰', '🍡', '🍮', '🍓'];
+      const count = 60;
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement('div');
+        s.className = 'spark';
+        s.textContent = sweets[Math.floor(Math.random() * sweets.length)];
+        s.style.left = Math.random() * 100 + 'vw';
+        const dur = 2.4 + Math.random() * 2.4;
+        s.style.animation = 'fall ' + dur + 's linear ' + (Math.random() * 1.0) + 's forwards';
+        s.style.fontSize = (1.2 + Math.random() * 1.6) + 'rem';
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), (dur + 1.2) * 1000);
+      }
+    }
+    function celebrateMilestone(n) {
+      sweetsRain();
+      const banner = document.createElement('div');
+      banner.className = 'milestone-banner';
+      banner.innerHTML = '🎉 ' + n.toLocaleString('ja-JP') + ' パワー突破！🐼<br><span style="font-size:0.85rem;font-weight:700;">みんなのパンダさんパワー、ありがとう💚</span>';
+      document.body.appendChild(banner);
+      requestAnimationFrame(() => banner.classList.add('show'));
+      setTimeout(() => banner.remove(), 3200);
     }
 
     chargeBtn.addEventListener('pointerdown', onTap);
