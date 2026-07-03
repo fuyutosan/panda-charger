@@ -559,6 +559,39 @@
     .draw-front.rarity-R { background: linear-gradient(135deg, #2196f3, #1565c0); }
     .draw-front.rarity-SR { background: linear-gradient(135deg, #9c27b0, #7b1fa2, #e91e63); background-size: 200% 200%; animation: feverGradient 3s linear infinite; }
     .draw-front.rarity-UR { background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700); background-size: 200% 200%; animation: feverGradient 2s linear infinite; }
+
+    /* 箔押し演出：Rは白シャイン、SR/URは虹ホロ。URはさらに金箔ふち＋星の瞬き */
+    .draw-front.rarity-R::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.35) 45%, transparent 60%);
+      background-size: 300% 300%;
+      animation: holoSweep 3.2s linear infinite;
+    }
+    .draw-front.rarity-SR::before, .draw-front.rarity-UR::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: linear-gradient(115deg, transparent 18%, rgba(255,60,150,0.34) 30%, rgba(255,235,0,0.36) 40%, rgba(0,255,170,0.32) 50%, rgba(0,140,255,0.36) 60%, rgba(200,0,255,0.30) 70%, transparent 82%);
+      background-size: 260% 260%;
+      animation: holoSweep 2.4s linear infinite;
+      mix-blend-mode: screen;
+    }
+    @keyframes holoSweep {
+      0%   { background-position: 120% 120%; }
+      100% { background-position: -20% -20%; }
+    }
+    .draw-front.rarity-UR::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background:
+        radial-gradient(circle at 18% 26%, rgba(255,255,255,0.95) 0 1.6px, transparent 3.4px),
+        radial-gradient(circle at 74% 16%, rgba(255,255,255,0.85) 0 1.2px, transparent 2.8px),
+        radial-gradient(circle at 38% 72%, rgba(255,255,255,0.95) 0 1.6px, transparent 3.4px),
+        radial-gradient(circle at 88% 62%, rgba(255,255,255,0.85) 0 1.2px, transparent 2.8px),
+        radial-gradient(circle at 60% 40%, rgba(255,255,255,0.8) 0 1px, transparent 2.4px);
+      animation: urTwinkle 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes urTwinkle { from { opacity: 0.25; } to { opacity: 1; } }
+    .draw-front.rarity-UR {
+      box-shadow: 0 10px 26px rgba(0,0,0,0.22), inset 0 0 0 3px rgba(255,215,0,0.85), inset 0 0 14px rgba(255,215,0,0.5);
+    }
     .draw-rarity-label {
       display: inline-block;
       font-size: 0.68rem;
