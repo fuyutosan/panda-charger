@@ -876,6 +876,13 @@
     }
     .card-zoom-overlay.show { opacity: 1; pointer-events: auto; }
     .card-zoom-inner { width: 230px; }
+    /* 拡大表示ではフリップ用の裏返し状態を解除しないとカードが見えない */
+    .card-zoom-inner .draw-face {
+      position: relative;
+      transform: none;
+      backface-visibility: visible;
+      -webkit-backface-visibility: visible;
+    }
 
     /* 実績一覧 */
     .ach-list { display: flex; flex-direction: column; gap: 8px; }
