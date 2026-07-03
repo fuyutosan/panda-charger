@@ -15,6 +15,16 @@
   <meta name="twitter:site" content="@meimei_pandasan">
   <meta name="twitter:image" content="https://fuyutosan.github.io/panda-charger/ogp.jpg">
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#079C15">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PP充電器">
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
 
@@ -26,6 +36,9 @@
       --mei-pale: #90EE90;
       --ink: #2a2a2a;
       --paper: #FAFAF5;
+      --aurora-a: rgba(7,156,21,0.18);
+      --aurora-b: rgba(0,200,83,0.13);
+      --aurora-c: rgba(144,238,144,0.10);
     }
 
     body {
@@ -49,7 +62,7 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image: url('__PANDA_FACE__');
+      background-image: url('{{ASSET_0}}');
       background-size: 70px;
       background-repeat: repeat;
       opacity: 0.05;
@@ -57,7 +70,7 @@
       z-index: 0;
     }
 
-    /* オーロラ風グラデ */
+    /* オーロラ風グラデ（時間帯でCSS変数を書き換える） */
     @keyframes auroraShift {
       0%   { transform: translate(0px, 0px) scale(1); }
       33%  { transform: translate(40px, -30px) scale(1.08); }
@@ -69,12 +82,26 @@
       position: fixed;
       inset: -20%;
       background:
-        radial-gradient(ellipse 70% 55% at 15% 15%, rgba(7,156,21,0.18) 0%, transparent 55%),
-        radial-gradient(ellipse 55% 70% at 85% 85%, rgba(0,200,83,0.13) 0%, transparent 55%),
-        radial-gradient(ellipse 65% 45% at 55% 45%, rgba(144,238,144,0.10) 0%, transparent 50%);
+        radial-gradient(ellipse 70% 55% at 15% 15%, var(--aurora-a) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 70% at 85% 85%, var(--aurora-b) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 45% at 55% 45%, var(--aurora-c) 0%, transparent 50%);
       animation: auroraShift 18s ease-in-out infinite alternate;
       pointer-events: none;
       z-index: 0;
+    }
+
+    /* 夜の星 */
+    .night-star {
+      position: fixed;
+      color: #fff;
+      font-size: 0.9rem;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+      animation: starTwinkle 3.4s ease-in-out infinite;
+    }
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.15; } 50% { opacity: 0.75; }
     }
 
     .wrap {
@@ -97,7 +124,48 @@
     .subtitle {
       font-size: 0.85rem;
       color: #4a6a4a;
-      margin-bottom: 22px;
+      margin-bottom: 14px;
+    }
+
+    /* ステータス行（チップ3つ） */
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.65);
+      border: 1.5px solid rgba(7,156,21,0.35);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #2a5a30;
+      white-space: nowrap;
+    }
+    .chip-sound {
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      border: none;
+      font-family: inherit;
+    }
+    .daily-hint {
+      font-size: 0.72rem;
+      color: #4a8a4a;
+      background: rgba(255, 220, 100, 0.35);
+      border: 1px dashed #d9a400;
+      border-radius: 12px;
+      padding: 4px 10px;
+      margin: -6px auto 14px;
+      max-width: 320px;
+      font-weight: 700;
     }
 
     /* メインカード（グラスモーフィズム） */
@@ -109,6 +177,28 @@
       border-radius: 28px;
       box-shadow: 0 12px 40px rgba(7,156,21,0.18);
       padding: 28px 24px 30px;
+      position: relative;
+    }
+
+    /* コンボ10の倍数で画面シェイク */
+    @keyframes cardShake {
+      0%, 100% { transform: translate(0,0); }
+      20% { transform: translate(-3px,2px); }
+      40% { transform: translate(3px,-2px); }
+      60% { transform: translate(-2px,-2px); }
+      80% { transform: translate(2px,2px); }
+    }
+    .card.shake { animation: cardShake 0.2s ease; }
+
+    /* フィーバー中は虹色グラデが背景に走る */
+    @keyframes feverGradient {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+    .card.fever {
+      background-image: linear-gradient(120deg, rgba(255,120,120,0.28), rgba(255,220,120,0.28), rgba(140,255,150,0.28), rgba(120,200,255,0.28), rgba(220,140,255,0.28), rgba(255,120,120,0.28));
+      background-size: 300% 300%;
+      animation: feverGradient 2.2s linear infinite;
     }
 
     /* パンダさん表示エリア */
@@ -156,11 +246,48 @@
     }
     .panda-face {
       display: none;
+      cursor: pointer;
     }
     .complete .panda-face { display: block; animation: popIn 0.7s cubic-bezier(.2,1.4,.4,1) both, faceBounce 2.2s ease-in-out 0.7s infinite; }
     .complete .panda-body { display: none; }
 
+    /* なでなでのぷるん */
+    @keyframes pettedJiggle {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      30% { transform: scale(0.92, 1.08) rotate(-4deg); }
+      60% { transform: scale(1.06, 0.94) rotate(4deg); }
+    }
+    .panda-face.petted { animation: pettedJiggle 0.4s ease; }
+
     .hidden { display: none !important; }
+
+    /* パンダさん吹き出し */
+    .panda-bubble {
+      position: absolute;
+      top: 6px;
+      right: 6%;
+      background: #fff;
+      border: 2px solid var(--mei);
+      border-radius: 16px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--mei);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 5;
+      transform: translateY(6px) scale(0.85);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .panda-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px; left: 26px;
+      border: 7px solid transparent;
+      border-top-color: var(--mei);
+    }
+    .panda-bubble.show { opacity: 1; transform: translateY(0) scale(1); }
 
     /* バッテリー */
     .battery {
@@ -273,6 +400,10 @@
     @keyframes hotBlink {
       0% { filter: brightness(1); } 50% { filter: brightness(1.7); }
     }
+    .charge-btn.feverBtn {
+      background: linear-gradient(135deg, #ffd400, #ff8a00) !important;
+      box-shadow: 0 0 34px rgba(255,190,0,0.8), 0 10px 24px rgba(255,140,0,0.45) !important;
+    }
 
     /* コンボ表示 */
     .combo {
@@ -301,6 +432,48 @@
       color: var(--mei); text-shadow: 0 2px 0 rgba(255,255,255,0.7); will-change: transform, opacity;
     }
 
+    /* ゴールデン笹（フィーバートリガー） */
+    .bamboo-fly {
+      position: fixed;
+      font-size: 48px;
+      z-index: 55;
+      pointer-events: auto;
+      cursor: pointer;
+      filter: drop-shadow(0 0 10px gold) drop-shadow(0 0 18px rgba(255,215,0,0.8));
+      will-change: transform, opacity;
+    }
+
+    /* フィーバーバナー */
+    .fever-banner {
+      position: fixed;
+      left: 50%;
+      top: 16%;
+      transform: translate(-50%, -50%) scale(0.6);
+      z-index: 61;
+      background: linear-gradient(135deg, #ffd400, #ff8a00);
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.4rem;
+      padding: 14px 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    .fever-banner.show { animation: popMilestone 1.6s ease forwards; }
+
+    /* 降ってくる笹（フィーバー中） */
+    .bamboo-rain {
+      position: fixed;
+      top: -20px;
+      font-size: 1.3rem;
+      pointer-events: none;
+      z-index: 50;
+      will-change: transform, opacity;
+    }
+
     /* 完了メッセージ */
     .result {
       display: none;
@@ -316,19 +489,120 @@
       font-weight: 900;
       font-size: 1.15rem;
       color: var(--mei);
+      margin-bottom: 10px;
+    }
+
+    /* デイリーボーナス */
+    .daily-bonus-banner {
+      background: linear-gradient(135deg, #ffe27a, #ffb300);
+      color: #6b4a00;
+      font-weight: 900;
+      font-size: 0.92rem;
+      border-radius: 14px;
+      padding: 8px 12px;
       margin-bottom: 12px;
     }
-    .msg-card {
-      background: linear-gradient(135deg, rgba(7,156,21,0.10), rgba(0,200,83,0.06));
-      border: 2px dashed var(--mei);
-      border-radius: 18px;
-      padding: 16px 18px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #1f5a26;
-      line-height: 1.6;
-      margin-bottom: 18px;
+
+    /* カードドロー演出 */
+    .card-draw-zone {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      min-height: 176px;
+      perspective: 900px;
     }
+    .draw-card {
+      width: 190px;
+      height: 168px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(.3,.9,.3,1);
+      animation: drawPop 0.5s cubic-bezier(.2,1.4,.4,1) both;
+    }
+    @keyframes drawPop {
+      0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .draw-card.flipped { transform: rotateY(180deg); }
+    .draw-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+    }
+    .draw-back {
+      background: linear-gradient(135deg, var(--mei), var(--mei-light));
+      font-size: 3rem;
+    }
+    .draw-back::after {
+      content: '🐼';
+      animation: sparkleSpin 1.4s linear infinite;
+    }
+    @keyframes sparkleSpin {
+      0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.5); }
+    }
+    .draw-front {
+      transform: rotateY(180deg);
+      color: #fff;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .draw-front.rarity-N { background: linear-gradient(135deg, #4caf50, #2e7d32); }
+    .draw-front.rarity-R { background: linear-gradient(135deg, #2196f3, #1565c0); }
+    .draw-front.rarity-SR { background: linear-gradient(135deg, #9c27b0, #7b1fa2, #e91e63); background-size: 200% 200%; animation: feverGradient 3s linear infinite; }
+    .draw-front.rarity-UR { background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700); background-size: 200% 200%; animation: feverGradient 2s linear infinite; }
+    .draw-rarity-label {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 900;
+      background: rgba(0,0,0,0.28);
+      border-radius: 999px;
+      padding: 2px 10px;
+      margin-bottom: 6px;
+      letter-spacing: 0.05em;
+    }
+    .draw-name {
+      font-weight: 900;
+      font-size: 0.98rem;
+      margin-bottom: 5px;
+    }
+    .draw-body {
+      font-size: 0.76rem;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+    .draw-new-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: #fff;
+      color: #ff2d55;
+      font-size: 0.62rem;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 999px;
+      transform: rotate(12deg);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+
+    /* バナー（称号アップ・実績） */
+    .up-banner {
+      background: linear-gradient(135deg, #ffe27a, #ffb300);
+      color: #6b4a00;
+      font-weight: 900;
+      font-size: 0.9rem;
+      border-radius: 14px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+
     .msg-label {
       display: inline-block;
       font-size: 0.72rem;
@@ -341,7 +615,7 @@
       letter-spacing: 0.05em;
     }
 
-    .actions { display: flex; flex-direction: column; gap: 10px; }
+    .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
     .btn {
       font-family: 'Noto Sans JP', sans-serif;
       font-weight: 700;
@@ -368,6 +642,31 @@
       border: 2px solid var(--mei);
     }
 
+    /* 丸型ナビボタン */
+    .nav-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: rgba(255,255,255,0.7);
+      border: 2px solid var(--mei);
+      color: var(--mei);
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .nav-btn .nav-emoji { font-size: 1.3rem; }
+    .nav-btn:active { transform: scale(0.95); }
+
     footer {
       position: relative;
       z-index: 1;
@@ -389,6 +688,15 @@
     @keyframes fall {
       0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
       100% { transform: translateY(105vh) rotate(540deg); opacity: 0; }
+    }
+
+    /* 「まわりの💚」なでなでエフェクト */
+    .heart-pop {
+      position: fixed;
+      pointer-events: none;
+      z-index: 46;
+      font-size: 1.2rem;
+      will-change: transform, opacity;
     }
 
     @media (min-height: 920px) {
@@ -426,17 +734,191 @@
       82%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
       100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
     }
+
+    /* 実績トースト */
+    .ach-toast {
+      position: fixed;
+      left: 50%;
+      top: 14px;
+      transform: translate(-50%, -120%);
+      z-index: 70;
+      background: linear-gradient(135deg, #333, #111);
+      color: #ffd700;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 10px 18px;
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      white-space: nowrap;
+      transition: transform 0.4s cubic-bezier(.2,1.3,.4,1);
+    }
+    .ach-toast.show { transform: translate(-50%, 0); }
+
+    /* モーダル（下からスライドアップシート） */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 80;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal-sheet {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      max-width: 440px;
+      margin: 0 auto;
+      background: var(--paper);
+      border-radius: 24px 24px 0 0;
+      max-height: 82vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(.2,.9,.3,1);
+      z-index: 81;
+      padding: 18px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+    }
+    .modal-overlay.show .modal-sheet { transform: translateY(0); }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      position: sticky;
+      top: 0;
+    }
+    .modal-title {
+      font-weight: 900;
+      font-size: 1.05rem;
+      color: var(--mei);
+    }
+    .modal-close {
+      background: rgba(7,156,21,0.12);
+      border: none;
+      color: var(--mei);
+      font-weight: 900;
+      font-size: 1rem;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .modal-sub {
+      font-size: 0.8rem;
+      color: #4a6a4a;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    /* ずかんグリッド */
+    .dex-section-title {
+      font-weight: 900;
+      font-size: 0.85rem;
+      color: #2a5a30;
+      margin: 14px 0 8px;
+      text-align: left;
+    }
+    .dex-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .dex-card {
+      aspect-ratio: 3 / 4;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 800;
+      text-align: center;
+      padding: 6px;
+      cursor: pointer;
+      color: #fff;
+      line-height: 1.3;
+      position: relative;
+    }
+    .dex-card.locked {
+      background: #d8d8d8;
+      color: #999;
+    }
+    .dex-card.N { background: linear-gradient(135deg, #4caf50, #2e7d32); }
+    .dex-card.R { background: linear-gradient(135deg, #2196f3, #1565c0); }
+    .dex-card.SR { background: linear-gradient(135deg, #9c27b0, #7b1fa2, #e91e63); }
+    .dex-card.UR { background: linear-gradient(135deg, #ffd700, #ff8c00); }
+
+    .dex-progress {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--mei);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .dex-since {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #2a5a30;
+      background: rgba(7,156,21,0.08);
+      border-radius: 14px;
+      padding: 8px;
+    }
+
+    /* カード拡大表示 */
+    .card-zoom-overlay {
+      position: fixed; inset: 0; z-index: 90;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .card-zoom-overlay.show { opacity: 1; pointer-events: auto; }
+    .card-zoom-inner { width: 230px; }
+
+    /* 実績一覧 */
+    .ach-list { display: flex; flex-direction: column; gap: 8px; }
+    .ach-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1.5px solid rgba(7,156,21,0.15);
+    }
+    .ach-item.locked { opacity: 0.55; filter: grayscale(0.6); }
+    .ach-icon {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      flex-shrink: 0;
+    }
+    .ach-item.locked .ach-icon { background: #ccc; }
+    .ach-name { font-weight: 800; font-size: 0.86rem; color: #2a5a30; }
+    .ach-desc { font-size: 0.72rem; color: #6a8a6a; }
   </style>
 </head>
 <body>
   <div class="wrap" id="app">
     <h1>🔋 パンダさんパワー充電器</h1>
-    <p class="subtitle">ボタンを連打して、パンダさんパワーを充電しよう！🔥🐼</p>
+    <p class="subtitle" id="subtitle">ボタンを連打して、パンダさんパワーを充電しよう！🔥🐼</p>
+
+    <div class="status-row">
+      <span class="chip" id="levelChip">Lv.1 みならい充電士</span>
+      <span class="chip" id="streakChip">🔥 きょうから！</span>
+      <button class="chip chip-sound" id="soundToggle" type="button">🔊</button>
+    </div>
+    <div class="daily-hint hidden" id="dailyHint">きょうの初充電でボーナスカードもらえるよ🎁</div>
 
     <div class="card" id="card">
       <div class="panda-stage">
-        <img class="panda-body" src="__PANDA_BODY__" alt="充電中のパンダさん">
-        <img class="panda-face" src="__PANDA_FACE__" alt="満タンのパンダさん">
+        <img class="panda-body" src="{{ASSET_1}}" alt="充電中のパンダさん">
+        <img class="panda-face" src="{{ASSET_2}}" alt="満タンのパンダさん" id="pandaFace">
+        <div class="panda-bubble" id="pandaBubble"></div>
       </div>
 
       <div class="battery">
@@ -458,15 +940,33 @@
 
       <div class="result" id="result">
         <div class="done-title">🎉充電完了🔋パンダさんパワーMAX🐼🔥</div>
-        <div class="msg-card">
-          <span class="msg-label">🐼 今日のパンダさんパワー</span><br>
-          <span id="message">―</span>
+        <div class="daily-bonus-banner hidden" id="dailyBonusBanner">🎁 デイリーボーナス！レア以上のカードが出たよ</div>
+
+        <div class="card-draw-zone">
+          <div class="draw-card" id="drawCard">
+            <div class="draw-face draw-back"></div>
+            <div class="draw-face draw-front" id="drawFront">
+              <span class="draw-new-badge hidden" id="drawNewBadge">NEW!</span>
+              <span class="draw-rarity-label" id="drawRarityLabel">N</span>
+              <div class="draw-name" id="drawName">―</div>
+              <div class="draw-body" id="drawBody">―</div>
+            </div>
+          </div>
         </div>
+
+        <div class="up-banner hidden" id="titleUpBanner"></div>
+        <div class="up-banner hidden" id="achBanner"></div>
+
         <div class="actions">
           <a class="btn btn-x" id="shareBtn" href="#" target="_blank" rel="noopener">𝕏 でシェアする</a>
           <button class="btn btn-again" id="againBtn">🔄 もう一回充電する</button>
           <a class="btn" style="background:linear-gradient(135deg,var(--mei),var(--mei-light));color:#fff;" href="https://fuyutosan.github.io/meimei/">🏠 メイメイのお家へ</a>
         </div>
+      </div>
+
+      <div class="nav-row" id="navRow">
+        <button class="nav-btn" id="openDexBtn" type="button"><span class="nav-emoji">📖</span>ずかん</button>
+        <button class="nav-btn" id="openAchBtn" type="button"><span class="nav-emoji">🏆</span>じっせき</button>
       </div>
     </div>
   </div>
@@ -475,35 +975,378 @@
     🐼 <a href="https://fuyutosan.github.io/meimei/">メイメイのお家</a> ｜ <a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a> 💚
   </footer>
 
-  <script>
-    const messages = [
-      "きみは今日もよくがんばってるよ🐼",
-      "むりせず、ゆっくりでいいんだよ💚",
-      "パンダさんパワー満タン！どんと来い⚡",
-      "笹を食べるみたいに、休むのも大事🎋",
-      "きみのペースが、いちばん正しいよ🐾",
-      "深呼吸ひとつで、世界はやさしくなる🌿",
-      "今日のきみに、まんまるはなまる💮",
-      "ころんでも、ぱんださんはまた立ち上がる🐼",
-      "ちいさな一歩も、ちゃんと前進だよ✨",
-      "パワー充電完了！いってらっしゃい🍀"
-    ];
+  <!-- ずかんモーダル -->
+  <div class="modal-overlay" id="dexOverlay">
+    <div class="modal-sheet" id="dexSheet">
+      <div class="modal-head">
+        <span class="modal-title">📖 パンダさんずかん</span>
+        <button class="modal-close" id="dexCloseBtn" type="button">✕</button>
+      </div>
+      <div class="dex-progress" id="dexProgress">コンプ率 0%（0/30）</div>
+      <div id="dexBody"></div>
+      <div class="dex-since" id="dexSince"></div>
+    </div>
+  </div>
 
+  <!-- じっせき（実績）モーダル -->
+  <div class="modal-overlay" id="achOverlay">
+    <div class="modal-sheet" id="achSheet">
+      <div class="modal-head">
+        <span class="modal-title">🏆 じっせき</span>
+        <button class="modal-close" id="achCloseBtn" type="button">✕</button>
+      </div>
+      <div class="modal-sub" id="achProgress"></div>
+      <div class="ach-list" id="achList"></div>
+    </div>
+  </div>
+
+  <!-- カード拡大表示 -->
+  <div class="card-zoom-overlay" id="cardZoomOverlay">
+    <div class="card-zoom-inner">
+      <div class="draw-face draw-front" id="zoomFront" style="position:relative;height:280px;border-radius:18px;">
+        <span class="draw-rarity-label" id="zoomRarityLabel">N</span>
+        <div class="draw-name" id="zoomName">―</div>
+        <div class="draw-body" id="zoomBody">―</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 実績解除トースト -->
+  <div class="ach-toast" id="achToast"></div>
+
+  <script>
+    /* =========================================================
+       セクション1: カードプール・実績定義・称号定義（データ）
+    ========================================================= */
+    const CARD_POOL = {
+      N: [
+        { id:'n01', name:'がんばりみとめ', body:'きみは今日もよくがんばってるよ🐼' },
+        { id:'n02', name:'ゆっくりで大丈夫', body:'むりせず、ゆっくりでいいんだよ💚' },
+        { id:'n03', name:'どんと来い', body:'パンダさんパワー満タン！どんと来い⚡' },
+        { id:'n04', name:'休むのも大事', body:'笹を食べるみたいに、休むのも大事🎋' },
+        { id:'n05', name:'きみのペース', body:'きみのペースが、いちばん正しいよ🐾' },
+        { id:'n06', name:'深呼吸', body:'深呼吸ひとつで、世界はやさしくなる🌿' },
+        { id:'n07', name:'まんまるはなまる', body:'今日のきみに、まんまるはなまる💮' },
+        { id:'n08', name:'立ち上がる', body:'ころんでも、パンダさんはまた立ち上がる🐼' },
+        { id:'n09', name:'ちいさな一歩', body:'ちいさな一歩も、ちゃんと前進だよ✨' },
+        { id:'n10', name:'いってらっしゃい', body:'パワー充電完了！いってらっしゃい🍀' },
+        { id:'n11', name:'笹おいしい', body:'がんばったぶんだけ、笹はおいしいよ🎋' },
+        { id:'n12', name:'すきを大切に', body:'きみの『すき』を、たいせつにね💚' }
+      ],
+      R: [
+        { id:'r01', name:'指は6本!?', body:'パンダさんの前足には竹をつかむ『偽の親指』があって、指が6本あるんだよ😲' },
+        { id:'r02', name:'1日16時間おやすみ', body:'パンダさんは1日16時間くらい寝るんだって。休むのも仕事だよ🌙' },
+        { id:'r03', name:'木の上でぽてっ', body:'大きな体なのに枝の上で熟睡。落ちそうで落ちない、パンダさんマジック🌳' },
+        { id:'r04', name:'坂ころころ', body:'パンダさんは坂を見ると転がりたくなるんだって。楽しければOK🐼' },
+        { id:'r05', name:'目もとはみんなちがう', body:'目のまわりの黒い模様は1頭ずつちがうの。指紋みたいなものだよ👀' },
+        { id:'r06', name:'鳴き声10種類以上', body:'ブリブリ、キーキー、ハンハン…10種類以上の声で、全部意味がちがうんだよ🎵' },
+        { id:'r07', name:'冬眠しないよ', body:'脂肪を蓄えられないから、冬もずーっと笹タイムなの🎋' },
+        { id:'r08', name:'赤ちゃんは900分の1', body:'生まれたては約100〜150g。お母さんパンダさんの約900分の1なの🍼' },
+        { id:'r09', name:'消化はたった2割', body:'10〜18kg食べても消化できるのは約2割。だからずっともぐもぐ🐼' },
+        { id:'r10', name:'実はおよぎ上手', body:'川でスイスイ泳げるんだよ。運動神経ばつぐん🏊' },
+        { id:'r11', name:'実はちょっと雑食', body:'果物や小さな動物を食べることもあるの。冒険心もかわいい🍑' },
+        { id:'r12', name:'食べながら居眠り', body:'ごはんが幸せすぎてうとうと…そんなにかわいいこと、ある？💤' }
+      ],
+      SR: [
+        { id:'s01', name:'10月28日はパンダさんの日', body:'10（パン）28（ダさん）の語呂合わせの記念日だよ🎉' },
+        { id:'s02', name:'1869年、世界へ', body:'フランスの宣教師ダヴィドさんが西洋に初めて紹介。150年以上世界を癒してるの✨' },
+        { id:'s03', name:'中国語で『大熊猫』', body:'大きなクマ猫って意味なんだよ。クマでもネコでもある、それがパンダさん🐼' },
+        { id:'s04', name:'名前はレッサーパンダさんが先', body:'『ジャイアント』は、先に見つかったレッサーパンダさんと区別するための名前なんだよ' }
+      ],
+      UR: [
+        { id:'u01', name:'メイメイのひみつ①', body:'メイメイの燃料は笹じゃなくて、みんなの『ありがとう』なんだ💚へへへ' },
+        { id:'u02', name:'メイメイのひみつ②', body:'メイメイの夢はね、世界中をパンダさんパワーでいっぱいにすることなの🌏' }
+      ]
+    };
+    const RARITY_ORDER = ['N', 'R', 'SR', 'UR'];
+    const CARD_TOTAL = RARITY_ORDER.reduce((sum, r) => sum + CARD_POOL[r].length, 0); // 30枚
+
+    function findCard(id) {
+      for (const r of RARITY_ORDER) {
+        const found = CARD_POOL[r].find(c => c.id === id);
+        if (found) return Object.assign({ rarity: r }, found);
+      }
+      return null;
+    }
+
+    // 称号: [到達charges, 称号名]
+    const TITLES = [
+      [1, 'みならい充電士'], [3, 'かけだし充電士'], [5, 'いちにんまえ充電士'],
+      [10, 'じゅくれん充電士'], [20, '充電のたつじん'], [35, 'パンダさんマスター'],
+      [50, 'でんせつの充電士'], [100, 'パンダさんの神様']
+    ];
+    function titleForCharges(n) {
+      let t = TITLES[0][1];
+      for (const [need, name] of TITLES) {
+        if (n >= need) t = name;
+      }
+      return t;
+    }
+
+    // 実績定義: id, 名前, 説明, 判定関数(save, ctx)
+    const ACHIEVEMENTS = [
+      { id:'first', name:'はじめての充電', desc:'充電を1回完了する', check: s => s.charges >= 1 },
+      { id:'c10', name:'充電じゅっかい', desc:'充電を10回完了する', check: s => s.charges >= 10 },
+      { id:'c50', name:'充電マニア', desc:'充電を50回完了する', check: s => s.charges >= 50 },
+      { id:'c100', name:'充電のきわみ', desc:'充電を100回完了する', check: s => s.charges >= 100 },
+      { id:'combo10', name:'コンボ10！', desc:'コンボを10つなげる', check: s => s.bestCombo >= 10 },
+      { id:'combo15', name:'コンボ15！！', desc:'コンボを15つなげる', check: s => s.bestCombo >= 15 },
+      { id:'combo20', name:'神の連打', desc:'コンボを20つなげる（途切れさせずに満タン直前まで！）', check: s => s.bestCombo >= 20 },
+      { id:'fever', name:'はじめてのフィーバー', desc:'ゴールデン笹フィーバーを体験する', check: s => s.fevers >= 1 },
+      { id:'streak3', name:'3日連続', desc:'3日連続で充電する', check: s => s.streak.count >= 3 },
+      { id:'streak7', name:'1週間連続', desc:'7日連続で充電する', check: s => s.streak.count >= 7 },
+      { id:'streak30', name:'1ヶ月連続', desc:'30日連続で充電する', check: s => s.streak.count >= 30 },
+      { id:'morning', name:'あさの充電', desc:'朝5〜9時に充電を完了する', check: (s, ctx) => !!(ctx && ctx.morning) },
+      { id:'night', name:'よふかし充電', desc:'深夜0〜4時に充電を完了する', check: (s, ctx) => !!(ctx && ctx.night) },
+      { id:'pet10', name:'なでなで10回', desc:'パンダさんを10回なでる', check: s => s.pets >= 10 },
+      { id:'dex50', name:'ずかん半分', desc:'コンプ率50%達成', check: s => dexOwnedCount(s) / CARD_TOTAL >= 0.5 },
+      { id:'dex100', name:'ずかんコンプ！', desc:'すべてのカードを集める', check: s => dexOwnedCount(s) >= CARD_TOTAL }
+    ];
+    function dexOwnedCount(s) {
+      return Object.keys(s.cards || {}).filter(k => s.cards[k] > 0).length;
+    }
+
+    /* =========================================================
+       セクション2: セーブデータ（localStorage）
+    ========================================================= */
+    const SAVE_KEY = 'ppc_save_v2';
+    function defaultSave() {
+      return {
+        charges: 0, taps: 0, bestCombo: 0, fevers: 0, pets: 0,
+        streak: { last: '', count: 0 },
+        cards: {},
+        ach: [],
+        sound: true,
+        since: ''
+      };
+    }
+    let save = defaultSave();
+    function loadSave() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) { save = defaultSave(); return; }
+        const parsed = JSON.parse(raw);
+        const d = defaultSave();
+        save = {
+          charges: typeof parsed.charges === 'number' ? parsed.charges : d.charges,
+          taps: typeof parsed.taps === 'number' ? parsed.taps : d.taps,
+          bestCombo: typeof parsed.bestCombo === 'number' ? parsed.bestCombo : d.bestCombo,
+          fevers: typeof parsed.fevers === 'number' ? parsed.fevers : d.fevers,
+          pets: typeof parsed.pets === 'number' ? parsed.pets : d.pets,
+          streak: (parsed.streak && typeof parsed.streak.count === 'number') ? { last: parsed.streak.last || '', count: parsed.streak.count } : d.streak,
+          cards: (parsed.cards && typeof parsed.cards === 'object') ? parsed.cards : d.cards,
+          ach: Array.isArray(parsed.ach) ? parsed.ach : d.ach,
+          sound: typeof parsed.sound === 'boolean' ? parsed.sound : d.sound,
+          since: typeof parsed.since === 'string' ? parsed.since : d.since
+        };
+      } catch (e) {
+        save = defaultSave();
+      }
+    }
+    function persist() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+      } catch (e) { /* 保存できなくても遊べる */ }
+    }
+    loadSave();
+
+    // 初回プレイ日を記録
+    function todayStr() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + day;
+    }
+    if (!save.since) {
+      save.since = todayStr();
+      persist();
+    }
+
+    /* =========================================================
+       セクション3: DOM参照
+    ========================================================= */
     const card = document.getElementById('card');
     const fill = document.getElementById('fill');
     const pct = document.getElementById('pct');
     const status = document.getElementById('status');
     const chargeBtn = document.getElementById('chargeBtn');
     const result = document.getElementById('result');
-    const messageEl = document.getElementById('message');
     const shareBtn = document.getElementById('shareBtn');
     const againBtn = document.getElementById('againBtn');
     const btnIcon = document.getElementById('btnIcon');
     const btnLabel = document.getElementById('btnLabel');
     const comboEl = document.getElementById('combo');
     const totalPowerNum = document.getElementById('totalPowerNum');
+    const subtitleEl = document.getElementById('subtitle');
+    const levelChip = document.getElementById('levelChip');
+    const streakChip = document.getElementById('streakChip');
+    const soundToggle = document.getElementById('soundToggle');
+    const dailyHint = document.getElementById('dailyHint');
+    const pandaBubble = document.getElementById('pandaBubble');
+    const pandaFace = document.getElementById('pandaFace');
+    const dailyBonusBanner = document.getElementById('dailyBonusBanner');
+    const drawCard = document.getElementById('drawCard');
+    const drawFront = document.getElementById('drawFront');
+    const drawNewBadge = document.getElementById('drawNewBadge');
+    const drawRarityLabel = document.getElementById('drawRarityLabel');
+    const drawName = document.getElementById('drawName');
+    const drawBody = document.getElementById('drawBody');
+    const titleUpBanner = document.getElementById('titleUpBanner');
+    const achBanner = document.getElementById('achBanner');
+    const openDexBtn = document.getElementById('openDexBtn');
+    const openAchBtn = document.getElementById('openAchBtn');
+    const dexOverlay = document.getElementById('dexOverlay');
+    const dexCloseBtn = document.getElementById('dexCloseBtn');
+    const dexBody = document.getElementById('dexBody');
+    const dexProgress = document.getElementById('dexProgress');
+    const dexSince = document.getElementById('dexSince');
+    const achOverlay = document.getElementById('achOverlay');
+    const achCloseBtn = document.getElementById('achCloseBtn');
+    const achList = document.getElementById('achList');
+    const achProgress = document.getElementById('achProgress');
+    const cardZoomOverlay = document.getElementById('cardZoomOverlay');
+    const zoomFront = document.getElementById('zoomFront');
+    const zoomRarityLabel = document.getElementById('zoomRarityLabel');
+    const zoomName = document.getElementById('zoomName');
+    const zoomBody = document.getElementById('zoomBody');
+    const achToast = document.getElementById('achToast');
 
-    // みんなの累計パワー（無料カウンターAPI / 失敗してもページは壊さない）
+    /* =========================================================
+       セクション4: 時間帯演出
+    ========================================================= */
+    function applyTimeTheme() {
+      const h = new Date().getHours();
+      let cls = 'night', greet = '今日もおつかれさま🌙 充電して休もうね';
+      let a = 'rgba(7,156,21,0.18)', b = 'rgba(0,200,83,0.13)', c = 'rgba(144,238,144,0.10)';
+      if (h >= 5 && h < 10) {
+        cls = 'morning'; greet = 'おはよ！朝の充電で1日スタート☀️';
+        a = 'rgba(200,230,120,0.22)'; b = 'rgba(255,180,200,0.18)'; c = 'rgba(255,220,150,0.14)';
+      } else if (h >= 10 && h < 17) {
+        cls = 'day'; greet = 'ボタンを連打して、パンダさんパワーを充電しよう！🔥🐼';
+        a = 'rgba(7,156,21,0.18)'; b = 'rgba(0,200,83,0.13)'; c = 'rgba(144,238,144,0.10)';
+      } else if (h >= 17 && h < 19) {
+        cls = 'evening'; greet = '夕方の充電タイム🌇 あと少しがんばろ';
+        a = 'rgba(255,150,60,0.2)'; b = 'rgba(0,180,90,0.14)'; c = 'rgba(255,200,120,0.14)';
+      } else {
+        cls = 'night'; greet = '今日もおつかれさま🌙 充電して休もうね';
+        a = 'rgba(20,60,90,0.22)'; b = 'rgba(90,50,140,0.16)'; c = 'rgba(20,120,90,0.14)';
+      }
+      document.body.classList.add(cls);
+      document.documentElement.style.setProperty('--aurora-a', a);
+      document.documentElement.style.setProperty('--aurora-b', b);
+      document.documentElement.style.setProperty('--aurora-c', c);
+      if (subtitleEl && mode === 'idle') subtitleEl.textContent = greet;
+
+      if (cls === 'night') {
+        const starCount = 6;
+        for (let i = 0; i < starCount; i++) {
+          const st = document.createElement('div');
+          st.className = 'night-star';
+          st.textContent = '⭐';
+          st.style.left = Math.random() * 96 + 'vw';
+          st.style.top = Math.random() * 60 + 'vh';
+          st.style.animationDelay = (Math.random() * 3) + 's';
+          st.style.fontSize = (0.5 + Math.random() * 0.7) + 'rem';
+          document.body.appendChild(st);
+        }
+      }
+    }
+
+    /* =========================================================
+       セクション5: WebAudio合成サウンド
+    ========================================================= */
+    let audioCtx = null;
+    function ensureAudio() {
+      if (!save.sound) return null;
+      try {
+        if (!audioCtx) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return null;
+          audioCtx = new Ctx();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(function(){});
+        return audioCtx;
+      } catch (e) { return null; }
+    }
+    function playTone(freq, dur, type, gainMax, delay) {
+      if (!save.sound) return;
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      try {
+        const t0 = ctx.currentTime + (delay || 0);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || 'square';
+        osc.frequency.setValueAtTime(freq, t0);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainMax || 0.08), t0 + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (dur || 0.15));
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + (dur || 0.15) + 0.02);
+      } catch (e) { /* 鳴らせなくても続行 */ }
+    }
+    function soundTap(comboN) {
+      const step = Math.min(comboN || 1, 16);
+      const freq = 300 * Math.pow(2, step / 24); // 半音ずつ上昇、上限あり
+      playTone(freq, 0.09, 'square', 0.07);
+    }
+    function soundFeverStart() {
+      [440, 554, 659, 880].forEach((f, i) => playTone(f, 0.18, 'triangle', 0.1, i * 0.08));
+    }
+    function soundComplete() {
+      [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.22, 'triangle', 0.12, i * 0.11));
+    }
+    function soundCard(rarity) {
+      const layers = { N: 1, R: 2, SR: 3, UR: 4 }[rarity] || 1;
+      for (let i = 0; i < layers; i++) {
+        playTone(1400 + i * 220, 0.28, 'sine', 0.09, i * 0.05);
+      }
+    }
+    function soundPet() {
+      playTone(360, 0.22, 'sine', 0.08);
+      playTone(480, 0.22, 'sine', 0.05, 0.05);
+    }
+    function vibrate(pattern) {
+      try {
+        if (navigator.vibrate) navigator.vibrate(pattern);
+      } catch (e) { /* 非対応端末は無視 */ }
+    }
+
+    /* =========================================================
+       セクション6: サウンドトグル・ステータスUI更新
+    ========================================================= */
+    function updateSoundUI() {
+      soundToggle.textContent = save.sound ? '🔊' : '🔇';
+    }
+    soundToggle.addEventListener('click', function () {
+      save.sound = !save.sound;
+      persist();
+      updateSoundUI();
+      if (save.sound) ensureAudio();
+    });
+    updateSoundUI();
+
+    function updateStatusChips() {
+      levelChip.textContent = 'Lv.' + save.charges + ' ' + titleForCharges(save.charges);
+      streakChip.textContent = save.streak.count > 0 ? ('🔥 連続' + save.streak.count + '日') : '🔥 きょうから！';
+    }
+    updateStatusChips();
+
+    function updateDailyHint() {
+      const today = todayStr();
+      if (save.streak.last !== today) {
+        dailyHint.classList.remove('hidden');
+      } else {
+        dailyHint.classList.add('hidden');
+      }
+    }
+    updateDailyHint();
+
+    /* =========================================================
+       セクション7: みんなの累計パワー（無料カウンターAPI）
+    ========================================================= */
     const POWER_GET = 'https://abacus.jasoncameron.dev/get/meimei-panda-charger/power';
     const POWER_HIT = 'https://abacus.jasoncameron.dev/hit/meimei-panda-charger/power';
 
@@ -529,11 +1372,129 @@
     }
     loadTotalPower();
 
+    /* =========================================================
+       セクション8: パンダさん吹き出し（連打中ランダム表示）
+    ========================================================= */
+    const BUBBLE_LINES_RAPID = ['へへへ', 'もっとー！', '笹パワー🎋', 'いいかんじ！', 'あったまってきた〜🔥', 'その調子〜', 'ぐんぐん充電中⚡', 'たのしい〜！'];
+    const BUBBLE_LINES_PET = ['へへへ', 'くすぐったいよ〜', 'もっとなでて〜'];
+    let bubbleTimer = null;
+    let bubbleHideTimer = null;
+    function showBubble(text) {
+      pandaBubble.textContent = text;
+      pandaBubble.classList.add('show');
+      clearTimeout(bubbleHideTimer);
+      bubbleHideTimer = setTimeout(() => pandaBubble.classList.remove('show'), 1400);
+    }
+    function scheduleRapidBubble() {
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => {
+        if (mode === 'rapid') {
+          showBubble(BUBBLE_LINES_RAPID[Math.floor(Math.random() * BUBBLE_LINES_RAPID.length)]);
+          scheduleRapidBubble();
+        }
+      }, 1700 + Math.random() * 700);
+    }
+
+    /* =========================================================
+       セクション9: ゴールデン笹フィーバー
+    ========================================================= */
+    let feverActive = false;
+    let feverEndTimer = null;
+    let feverCooldownUntil = 0;
+    let bambooScheduleTimer = null;
+    let lastComboTapTime = 0;
+
+    function scheduleBamboo() {
+      clearTimeout(bambooScheduleTimer);
+      bambooScheduleTimer = setTimeout(() => {
+        if (mode === 'rapid' && !feverActive) spawnBamboo();
+        if (mode === 'rapid') scheduleBamboo();
+      }, 5000 + Math.random() * 5000);
+    }
+    function spawnBamboo() {
+      const b = document.createElement('div');
+      b.className = 'bamboo-fly';
+      b.textContent = '🎋';
+      const startY = 60 + Math.random() * (window.innerHeight * 0.5);
+      const fromLeft = Math.random() < 0.5;
+      b.style.top = startY + 'px';
+      b.style.left = (fromLeft ? '-60px' : (window.innerWidth + 60) + 'px');
+      document.body.appendChild(b);
+      const dx = fromLeft ? (window.innerWidth + 140) : -(window.innerWidth + 140);
+      const anim = b.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 0 },
+        { transform: 'translate(' + (dx * 0.1) + 'px,-10px) rotate(40deg)', opacity: 1, offset: 0.1 },
+        { transform: 'translate(' + (dx * 0.9) + 'px,10px) rotate(320deg)', opacity: 1, offset: 0.9 },
+        { transform: 'translate(' + dx + 'px,0) rotate(360deg)', opacity: 0 }
+      ], { duration: 5000, easing: 'ease-in-out' });
+      let removed = false;
+      const remove = () => { if (!removed) { removed = true; b.remove(); } };
+      b.addEventListener('pointerdown', function (e) {
+        e.stopPropagation();
+        anim.cancel();
+        remove();
+        startFever();
+      });
+      anim.onfinish = remove;
+      setTimeout(remove, 5200);
+    }
+
+    function startFever() {
+      const now = Date.now();
+      if (feverActive) return;
+      feverActive = true;
+      feverCooldownUntil = now + 10000;
+      card.classList.add('fever');
+      chargeBtn.classList.add('feverBtn');
+      soundFeverStart();
+      vibrate(20);
+      showFeverBanner();
+      bambooRain();
+      save.fevers = (save.fevers || 0) + 1;
+      persist();
+      clearTimeout(feverEndTimer);
+      feverEndTimer = setTimeout(endFever, 6000);
+    }
+    function endFever() {
+      feverActive = false;
+      card.classList.remove('fever');
+      chargeBtn.classList.remove('feverBtn');
+    }
+    function showFeverBanner() {
+      const b = document.createElement('div');
+      b.className = 'fever-banner';
+      b.textContent = '🎋 FEVER!';
+      document.body.appendChild(b);
+      requestAnimationFrame(() => b.classList.add('show'));
+      setTimeout(() => b.remove(), 1700);
+    }
+    function bambooRain() {
+      const count = 18;
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement('div');
+        s.className = 'bamboo-rain';
+        s.textContent = '🎋';
+        s.style.left = Math.random() * 100 + 'vw';
+        const dur = 2 + Math.random() * 2;
+        s.style.animation = 'fall ' + dur + 's linear ' + (Math.random() * 1.2) + 's forwards';
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), (dur + 1.3) * 1000);
+      }
+    }
+
+    /* =========================================================
+       セクション10: メインゲームロジック（連打充電）
+    ========================================================= */
     let mode = 'idle';        // idle | rapid | complete
     let percent = 0;
     let combo = 0;
     let lastTap = 0;
     let comboResetTimer = null;
+    const MAX_PARTICLES = 60; // DOMノードスパム防止
+
+    function activeParticleCount() {
+      return document.querySelectorAll('.shock, .spark-hit, .floattext, .spark, .bamboo-rain, .heart-pop').length;
+    }
 
     function setPercent(p) {
       percent = Math.max(0, Math.min(100, p));
@@ -549,6 +1510,9 @@
       btnIcon.textContent = '🔥';
       btnLabel.textContent = 'れんだ！';
       status.textContent = 'れんだ！れんだ！🔥';
+      ensureAudio();
+      scheduleRapidBubble();
+      scheduleBamboo();
     }
 
     function onTap(e) {
@@ -562,10 +1526,15 @@
       const now = performance.now();
       const dt = now - lastTap;
       lastTap = now;
-      combo = (dt < 350) ? combo + 1 : 1;
+      const comboWindow = feverActive ? 600 : 350;
+      combo = (dt < comboWindow) ? combo + 1 : 1;
+      if (combo > save.bestCombo) { save.bestCombo = combo; }
+      save.taps = (save.taps || 0) + 1;
 
-      // 速く連打するほど上昇量UP（+3% 〜 最大+8%）
-      const gain = Math.min(8, 3 + Math.floor(combo / 2));
+      // 速く連打するほど上昇量UP（+2% 〜 最大+6%）。フィーバー中は2倍。
+      // 満タンまで約21タップ＝コンボ実績・フィーバーが現実的に狙える長さにしている
+      let gain = Math.min(6, 2 + Math.floor(combo / 3));
+      if (feverActive) gain *= 2;
       setPercent(percent + gain);
 
       // ボタン震え（連続発火のためリフローで再生）
@@ -573,8 +1542,8 @@
       void chargeBtn.offsetWidth;
       chargeBtn.classList.add('hit');
 
-      // 満タン手前で赤熱
-      chargeBtn.classList.toggle('hot', percent >= 70);
+      // 満タン手前で赤熱（フィーバー中は専用色を維持）
+      if (!feverActive) chargeBtn.classList.toggle('hot', percent >= 70);
 
       // コンボ表示
       if (combo >= 2) {
@@ -588,15 +1557,33 @@
       comboResetTimer = setTimeout(() => {
         combo = 0;
         comboEl.classList.remove('show');
-      }, 900);
+      }, feverActive ? 900 : 900);
+
+      // 画面シェイク（コンボ10の倍数）
+      if (combo > 0 && combo % 10 === 0) {
+        card.classList.remove('shake');
+        void card.offsetWidth;
+        card.classList.add('shake');
+      }
+
+      // コンボ15到達で自動フィーバー（クールダウン10秒・手動と同時発動しない）
+      if (combo === 15 && !feverActive && Date.now() > feverCooldownUntil) {
+        startFever();
+      }
+
+      // 音・バイブ
+      soundTap(combo);
+      vibrate(8);
 
       // 爆発エフェクト
       const r = chargeBtn.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
-      spawnShock(cx, cy);
-      spawnSparks(cx, cy);
-      floatGain(cx, r.top + 6, '+' + gain + '%');
+      if (activeParticleCount() < MAX_PARTICLES) {
+        spawnShock(cx, cy);
+        spawnSparks(cx, cy);
+        floatGain(cx, r.top + 6, '+' + gain + '%');
+      }
 
       if (percent >= 100) finishCharge();
     }
@@ -655,29 +1642,181 @@
       setTimeout(() => f.remove(), 700);
     }
 
+    /* =========================================================
+       セクション11: 日付処理（ストリーク・デイリーボーナス）
+    ========================================================= */
+    function yesterdayStr() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + day;
+    }
+    // 今日初の完了かどうかを判定し、ストリークを更新。戻り値: 今日初回だったか
+    function processDailyOnComplete() {
+      const today = todayStr();
+      const isFirstToday = save.streak.last !== today;
+      if (isFirstToday) {
+        if (save.streak.last === yesterdayStr()) {
+          save.streak.count += 1;
+        } else {
+          save.streak.count = 1;
+        }
+        save.streak.last = today;
+      }
+      return isFirstToday;
+    }
+
+    /* =========================================================
+       セクション12: カードドロー（ガチャ）
+    ========================================================= */
+    function drawRarity(isDailyBonus) {
+      const r = Math.random() * 100;
+      let rarity;
+      if (r < 2) rarity = 'UR';
+      else if (r < 10) rarity = 'SR';
+      else if (r < 36) rarity = 'R';
+      else rarity = 'N';
+      if (isDailyBonus && rarity === 'N') rarity = 'R';
+      return rarity;
+    }
+    function drawOneCard(isDailyBonus) {
+      const rarity = drawRarity(isDailyBonus);
+      const pool = CARD_POOL[rarity];
+      const card = pool[Math.floor(Math.random() * pool.length)];
+      return Object.assign({ rarity: rarity }, card);
+    }
+
+    function playCardDraw(drawn) {
+      const isNew = !(save.cards[drawn.id] > 0);
+      save.cards[drawn.id] = (save.cards[drawn.id] || 0) + 1;
+
+      drawCard.classList.remove('flipped');
+      drawFront.className = 'draw-face draw-front rarity-' + drawn.rarity;
+      drawRarityLabel.textContent = drawn.rarity;
+      drawName.textContent = drawn.name;
+      drawBody.textContent = drawn.body;
+      drawNewBadge.classList.toggle('hidden', !isNew);
+
+      // 裏面→表面のフリップ演出
+      setTimeout(() => {
+        drawCard.classList.add('flipped');
+        soundCard(drawn.rarity);
+        vibrate(drawn.rarity === 'UR' || drawn.rarity === 'SR' ? [20, 30, 20] : 15);
+      }, 800);
+
+      return isNew;
+    }
+
+    /* =========================================================
+       セクション13: 実績判定・トースト
+    ========================================================= */
+    let achToastQueue = [];
+    let achToastShowing = false;
+    function checkAchievements(ctx) {
+      const newly = [];
+      ACHIEVEMENTS.forEach(a => {
+        if (save.ach.indexOf(a.id) === -1) {
+          try {
+            if (a.check(save, ctx)) {
+              save.ach.push(a.id);
+              newly.push(a);
+            }
+          } catch (e) { /* 判定失敗はスキップ */ }
+        }
+      });
+      return newly;
+    }
+    function queueAchToast(a) {
+      achToastQueue.push(a);
+      if (!achToastShowing) showNextAchToast();
+    }
+    function showNextAchToast() {
+      const a = achToastQueue.shift();
+      if (!a) { achToastShowing = false; return; }
+      achToastShowing = true;
+      achToast.textContent = '🏆実績解除！' + a.name;
+      achToast.classList.add('show');
+      playTone(1200, 0.15, 'sine', 0.09);
+      playTone(1600, 0.18, 'sine', 0.09, 0.12);
+      setTimeout(() => {
+        achToast.classList.remove('show');
+        setTimeout(showNextAchToast, 350);
+      }, 2200);
+    }
+
+    /* =========================================================
+       セクション14: 充電完了処理
+    ========================================================= */
     function finishCharge() {
+      if (mode === 'complete') return; // 2重発動防止の再入ガード
       mode = 'complete';
       clearTimeout(comboResetTimer);
+      clearTimeout(bubbleTimer);
+      clearTimeout(bambooScheduleTimer);
       combo = 0;
       comboEl.classList.remove('show');
+      pandaBubble.classList.remove('show');
       card.classList.remove('charging');
       card.classList.add('complete');
-      chargeBtn.classList.remove('rapid', 'hot', 'hit');
+      chargeBtn.classList.remove('rapid', 'hot', 'hit', 'feverBtn');
+      card.classList.remove('fever');
+      feverActive = false;
+      clearTimeout(feverEndTimer);
       chargeBtn.disabled = true;
       btnIcon.textContent = '⚡';
       btnLabel.textContent = '充電する';
       status.textContent = 'パワー満タンになったよ！🐼';
-      // 今日のメッセージ（充電するたびランダム）
-      const msg = messages[Math.floor(Math.random() * messages.length)];
-      messageEl.textContent = msg;
+
+      const prevTitle = titleForCharges(save.charges);
+      save.charges += 1;
+      const newTitle = titleForCharges(save.charges);
+
+      const isDailyBonus = processDailyOnComplete();
+      updateStatusChips();
+      updateDailyHint();
+
+      // カードドロー
+      const drawn = drawOneCard(isDailyBonus);
+      playCardDraw(drawn);
+
+      // デイリーボーナス表示
+      dailyBonusBanner.classList.toggle('hidden', !isDailyBonus);
+
+      // 称号アップ演出
+      const h = new Date().getHours();
+      const ctx = { morning: h >= 5 && h < 9, night: h >= 0 && h < 4 };
+      if (newTitle !== prevTitle) {
+        titleUpBanner.textContent = '⭐ 称号アップ！「' + newTitle + '」になったよ！';
+        titleUpBanner.classList.remove('hidden');
+        playTone(700, 0.12, 'triangle', 0.1);
+        playTone(1000, 0.2, 'triangle', 0.1, 0.13);
+      } else {
+        titleUpBanner.classList.add('hidden');
+      }
+
+      // 実績判定
+      const newAch = checkAchievements(ctx);
+      if (newAch.length) {
+        achBanner.textContent = '🏆 実績解除：' + newAch.map(a => a.name).join('、');
+        achBanner.classList.remove('hidden');
+        newAch.forEach(a => queueAchToast(a));
+      } else {
+        achBanner.classList.add('hidden');
+      }
+
+      persist();
+
+      // 今日のメッセージ（シェア用の短文はカード本文優先）
+      const shortMsg = drawn.body;
 
       // シェアリンク組み立て
       const playUrl = 'https://fuyutosan.github.io/panda-charger/';
       const buildShareText = (total) => {
-        if (total) {
-          return `パンダさんパワー充電完了！⚡🐼\n「${msg}」\nみんなで${total.toLocaleString('ja-JP')}のパンダさんパワーを充電したよ🐼🔋⚡\nもっと充電して世界中をパンダさんパワーでパンパンパンダさんにしよう🐼🌏\n👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
-        }
-        return `パンダさんパワー充電完了！⚡🐼\n「${msg}」\nきみも充電してみてね👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
+        const lvLine = 'Lv.' + save.charges + ' ' + newTitle + '／🔥連続' + save.streak.count + '日';
+        const totalLine = total ? ('みんなで' + total.toLocaleString('ja-JP') + 'のパンダさんパワーを充電したよ🔋\n') : '';
+        return `パンダさんパワー充電完了！⚡🐼\n「${shortMsg}」\n${lvLine}\n${totalLine}👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
       };
       shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(buildShareText(null));
       // みんなの累計パワー +1（完了時に1回だけ）→ 完了後シェアテキストに累計を反映
@@ -686,22 +1825,31 @@
         if (isMilestone(total)) celebrateMilestone(total);
       });
 
+      soundComplete();
+      vibrate([30, 40, 30]);
       burstSparkles();
     }
 
     function resetCharge() {
       mode = 'idle';
-      card.classList.remove('complete', 'charging');
-      chargeBtn.classList.remove('rapid', 'hot', 'hit');
+      card.classList.remove('complete', 'charging', 'fever', 'shake');
+      chargeBtn.classList.remove('rapid', 'hot', 'hit', 'feverBtn');
       chargeBtn.disabled = false;
+      feverActive = false;
+      clearTimeout(feverEndTimer);
       btnIcon.textContent = '⚡';
       btnLabel.textContent = '充電する';
       combo = 0;
       lastTap = 0;
       comboEl.classList.remove('show');
       comboEl.textContent = '';
+      dailyBonusBanner.classList.add('hidden');
+      titleUpBanner.classList.add('hidden');
+      achBanner.classList.add('hidden');
+      drawCard.classList.remove('flipped');
       setPercent(0);
       status.textContent = 'ボタンを押して連打スタート！⚡';
+      applyTimeTheme();
     }
 
     function burstSparkles() {
@@ -750,15 +1898,161 @@
       setTimeout(() => banner.remove(), 3200);
     }
 
+    /* =========================================================
+       セクション15: なでなでモード
+    ========================================================= */
+    let petBubbleTimer = null;
+    function onPetPanda(e) {
+      if (mode !== 'complete') return;
+      if (e) e.preventDefault();
+      pandaFace.classList.remove('petted');
+      void pandaFace.offsetWidth;
+      pandaFace.classList.add('petted');
+
+      save.pets = (save.pets || 0) + 1;
+      persist();
+
+      soundPet();
+      vibrate(10);
+
+      const r = pandaFace.getBoundingClientRect();
+      spawnHearts(r.left + r.width / 2, r.top + r.height / 2);
+
+      if (Math.random() < 0.4) {
+        clearTimeout(petBubbleTimer);
+        showBubble(BUBBLE_LINES_PET[Math.floor(Math.random() * BUBBLE_LINES_PET.length)]);
+      }
+
+      // なでなで実績はリアルタイムでもチェック（次の完了を待たず反映）
+      const newAch = checkAchievements({});
+      if (newAch.length) {
+        newAch.forEach(a => queueAchToast(a));
+        persist();
+      }
+    }
+    function spawnHearts(x, y) {
+      if (activeParticleCount() >= MAX_PARTICLES) return;
+      const count = 5;
+      for (let i = 0; i < count; i++) {
+        const h = document.createElement('div');
+        h.className = 'heart-pop';
+        h.textContent = '💚';
+        h.style.left = x + 'px';
+        h.style.top = y + 'px';
+        document.body.appendChild(h);
+        const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.4;
+        const dist = 40 + Math.random() * 50;
+        const dx = Math.cos(ang) * dist;
+        const dy = Math.sin(ang) * dist;
+        h.animate([
+          { transform: 'translate(-50%,-50%) scale(0.6)', opacity: 1 },
+          { transform: 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px)) scale(1.1)', opacity: 0 }
+        ], { duration: 600 + Math.random() * 200, easing: 'ease-out' });
+        setTimeout(() => h.remove(), 850);
+      }
+    }
+
+    /* =========================================================
+       セクション16: ずかんモーダル
+    ========================================================= */
+    const RARITY_LABEL_JA = { N: 'ノーマル', R: 'レア', SR: 'スーパーレア', UR: 'ウルトラレア' };
+    function renderDex() {
+      let html = '';
+      RARITY_ORDER.forEach(rarity => {
+        html += '<div class="dex-section-title">' + rarity + '（' + RARITY_LABEL_JA[rarity] + '）</div><div class="dex-grid">';
+        CARD_POOL[rarity].forEach(c => {
+          const owned = save.cards[c.id] > 0;
+          if (owned) {
+            html += '<div class="dex-card ' + rarity + '" data-card-id="' + c.id + '">' + c.name + '</div>';
+          } else {
+            html += '<div class="dex-card locked">？</div>';
+          }
+        });
+        html += '</div>';
+      });
+      dexBody.innerHTML = html;
+
+      const owned = dexOwnedCount(save);
+      const rate = Math.round((owned / CARD_TOTAL) * 100);
+      dexProgress.textContent = 'コンプ率 ' + rate + '%（' + owned + '/' + CARD_TOTAL + '）' + (owned >= CARD_TOTAL ? ' 🎉コンプおめでとう！' : '');
+
+      // 記念日
+      const since = save.since || todayStr();
+      const days = Math.max(1, Math.floor((dateOnly(new Date()) - dateOnly(new Date(since))) / 86400000) + 1);
+      dexSince.textContent = '🐼 パンダさん充電士になって ' + days + '日目';
+
+      dexBody.querySelectorAll('.dex-card[data-card-id]').forEach(el => {
+        el.addEventListener('click', () => openCardZoom(el.getAttribute('data-card-id')));
+      });
+    }
+    function dateOnly(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    }
+    function openCardZoom(id) {
+      const c = findCard(id);
+      if (!c) return;
+      zoomFront.className = 'draw-face draw-front rarity-' + c.rarity;
+      zoomFront.style.position = 'relative';
+      zoomRarityLabel.textContent = c.rarity;
+      zoomName.textContent = c.name;
+      zoomBody.textContent = c.body;
+      cardZoomOverlay.classList.add('show');
+    }
+    cardZoomOverlay.addEventListener('click', () => cardZoomOverlay.classList.remove('show'));
+
+    /* =========================================================
+       セクション17: じっせき（実績）モーダル
+    ========================================================= */
+    function renderAch() {
+      const unlockedCount = save.ach.length;
+      achProgress.textContent = '解除済み ' + unlockedCount + ' / ' + ACHIEVEMENTS.length;
+      achList.innerHTML = ACHIEVEMENTS.map(a => {
+        const unlocked = save.ach.indexOf(a.id) !== -1;
+        return '<div class="ach-item' + (unlocked ? '' : ' locked') + '">' +
+          '<div class="ach-icon">' + (unlocked ? '🏆' : '🔒') + '</div>' +
+          '<div><div class="ach-name">' + a.name + '</div><div class="ach-desc">' + a.desc + '</div></div>' +
+          '</div>';
+      }).join('');
+    }
+
+    /* =========================================================
+       セクション18: モーダル開閉共通処理
+    ========================================================= */
+    function openModal(overlay, renderFn) {
+      if (renderFn) renderFn();
+      overlay.classList.add('show');
+    }
+    function closeModal(overlay) {
+      overlay.classList.remove('show');
+    }
+    openDexBtn.addEventListener('click', () => openModal(dexOverlay, renderDex));
+    openAchBtn.addEventListener('click', () => openModal(achOverlay, renderAch));
+    dexCloseBtn.addEventListener('click', () => closeModal(dexOverlay));
+    achCloseBtn.addEventListener('click', () => closeModal(achOverlay));
+    dexOverlay.addEventListener('click', (e) => { if (e.target === dexOverlay) closeModal(dexOverlay); });
+    achOverlay.addEventListener('click', (e) => { if (e.target === achOverlay) closeModal(achOverlay); });
+
+    /* =========================================================
+       セクション19: イベント登録・初期化
+    ========================================================= */
     chargeBtn.addEventListener('pointerdown', onTap);
     againBtn.addEventListener('click', resetCharge);
+    pandaFace.addEventListener('pointerdown', onPetPanda);
 
     // ピンチズーム抑止（アプリ内ブラウザ・Safari対策。ダブルタップズームはviewport設定で無効化）
-    ['gesturestart','gesturechange','gestureend'].forEach(function (ev) {
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
       document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
     });
 
+    applyTimeTheme();
     setPercent(0);
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
   </script>
 </body>
 </html>
