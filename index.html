@@ -860,6 +860,45 @@
       text-align: center;
     }
 
+    /* クラウドセーブ */
+    .btn-cloud { background: #eaf6ff; color: #1573b8; }
+    .cloud-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border: 2px solid #cfe6cf;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-family: inherit;
+      background: #fff;
+      color: #2a5a30;
+    }
+    .cloud-input:focus { outline: none; border-color: var(--mei); }
+    .cloud-btn {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      margin-top: 4px;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.98rem;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .cloud-btn:active { transform: scale(0.98); }
+    .cloud-btn-main { background: linear-gradient(135deg, var(--mei), var(--mei-light)); color: #fff; }
+    .cloud-btn-sub { background: #eef4ee; color: #3a6a40; margin-top: 8px; }
+    .cloud-msg {
+      text-align: center;
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--mei);
+      min-height: 1.2em;
+      margin: 12px 0 4px;
+    }
+
     /* ずかんグリッド */
     .dex-section-title {
       font-weight: 900;
@@ -1016,6 +1055,7 @@
         <div class="actions">
           <a class="btn btn-x" id="shareBtn" href="#" target="_blank" rel="noopener">𝕏 でシェアする</a>
           <button class="btn btn-again" id="againBtn">🔄 もう一回充電する</button>
+          <button class="btn btn-cloud" id="openCloudBtn" type="button">☁️ きろくをのこす</button>
           <a class="btn" style="background:linear-gradient(135deg,var(--mei),var(--mei-light));color:#fff;" href="https://fuyutosan.github.io/meimei/">🏠 メイメイのお家へ</a>
         </div>
       </div>
@@ -1055,6 +1095,23 @@
       <div class="modal-sub" id="outfitProgress"></div>
       <div class="outfit-grid" id="outfitBody"></div>
       <div class="dex-since">充電をがんばると、あたらしいきせかえがもらえるよ🎁</div>
+    </div>
+  </div>
+
+  <!-- クラウドセーブ（記録をのこす）モーダル -->
+  <div class="modal-overlay" id="cloudOverlay">
+    <div class="modal-sheet" id="cloudSheet">
+      <div class="modal-head">
+        <span class="modal-title">☁️ きろくをのこす</span>
+        <button class="modal-close" id="cloudCloseBtn" type="button">✕</button>
+      </div>
+      <div class="modal-sub">なまえとあいことばを決めておくと、スマホを変えても・データが消えても続きからあそべるよ🐼</div>
+      <input id="cloud-name" class="cloud-input" type="text" maxlength="16" placeholder="なまえ（ニックネーム）">
+      <input id="cloud-secret" class="cloud-input" type="text" maxlength="16" placeholder="あいことば（記録を守る合言葉）">
+      <button class="cloud-btn cloud-btn-main" id="cloudSaveBtn" type="button">💾 このスマホの記録を保存する</button>
+      <button class="cloud-btn cloud-btn-sub" id="cloudRestoreBtn" type="button">📲 別のスマホから呼び出す</button>
+      <div class="cloud-msg" id="cloudMsg"></div>
+      <div class="dex-since">あいことばは、キミのスマホの中でヒミツの文字に変えてから送るよ。生のままは保存しないから安心🔒</div>
     </div>
   </div>
 
@@ -1224,6 +1281,8 @@
           sound: typeof parsed.sound === 'boolean' ? parsed.sound : d.sound,
           since: typeof parsed.since === 'string' ? parsed.since : d.since
         };
+        // クラウド同期の目印（last-write-wins用）は保持する
+        if (typeof parsed._syncedAt === 'string') save._syncedAt = parsed._syncedAt;
       } catch (e) {
         save = defaultSave();
       }
@@ -1232,6 +1291,7 @@
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify(save));
       } catch (e) { /* 保存できなくても遊べる */ }
+      if (window.CloudSync) window.CloudSync.schedulePush(save); // クラウドにも裏でコピー（設定済みのときだけ）
     }
     loadSave();
 
@@ -2198,6 +2258,83 @@
     outfitOverlay.addEventListener('click', (e) => { if (e.target === outfitOverlay) closeModal(outfitOverlay); });
 
     /* =========================================================
+       セクション18.5: クラウドセーブ（記録をのこす）
+    ========================================================= */
+    const openCloudBtn = document.getElementById('openCloudBtn');
+    const cloudOverlay = document.getElementById('cloudOverlay');
+    const cloudCloseBtn = document.getElementById('cloudCloseBtn');
+    const cloudNameInput = document.getElementById('cloud-name');
+    const cloudSecretInput = document.getElementById('cloud-secret');
+    const cloudSaveBtn = document.getElementById('cloudSaveBtn');
+    const cloudRestoreBtn = document.getElementById('cloudRestoreBtn');
+    const cloudMsg = document.getElementById('cloudMsg');
+    function cloudTell(t) { cloudMsg.textContent = t; }
+
+    function renderCloud() {
+      const cred = window.CloudSync ? CloudSync.getCred() : null;
+      if (cred && cred.nickname) {
+        cloudNameInput.value = cred.nickname;
+        cloudTell('「' + cred.nickname + '」で記録を保存中だよ☁️ 充電するたび自動でバックアップされてるよ');
+      } else {
+        cloudTell('');
+      }
+    }
+    // このスマホの記録をクラウドに保存（初回）
+    async function cloudSaveNow() {
+      const nm = cloudNameInput.value.trim();
+      const sc = cloudSecretInput.value.trim();
+      if (!nm || !sc) { cloudTell('なまえとあいことばの両方を入れてね🐼'); return; }
+      if (!window.CloudSync || !CloudSync.enabled()) { cloudTell('いまは保存の準備中だよ。もう少し待ってね🐼'); return; }
+      cloudTell('保存してるよ…☁️');
+      const hash = await CloudSync.hashSecret(nm, sc);
+      CloudSync.saveCred(nm, hash);
+      await CloudSync.pushNow(save);
+      cloudTell('保存できたよ！これで別のスマホでも「' + nm + '」＋あいことばで続きからあそべるよ🐼✨');
+    }
+    // 別のスマホで作った記録・消えた記録を呼び出す
+    async function cloudRestore() {
+      const nm = cloudNameInput.value.trim();
+      const sc = cloudSecretInput.value.trim();
+      if (!nm || !sc) { cloudTell('なまえとあいことばの両方を入れてね🐼'); return; }
+      if (!window.CloudSync || !CloudSync.enabled()) { cloudTell('いまは呼び出しの準備中だよ。もう少し待ってね🐼'); return; }
+      cloudTell('さがしてるよ…🐼');
+      const hash = await CloudSync.hashSecret(nm, sc);
+      const remote = await CloudSync.pull(nm, hash);
+      if (!remote) { cloudTell('そのなまえとあいことばの記録は見つからなかったよ。入力をたしかめてね'); return; }
+      localStorage.setItem(SAVE_KEY, JSON.stringify(remote));
+      loadSave();
+      CloudSync.saveCred(nm, hash);
+      // 画面を復元後の状態に反映
+      updateStatusChips();
+      updateDailyHint();
+      renderPandaOutfit();
+      cloudTell('おかえり！記録が見つかったよ🐼 続きからあそべるよ');
+    }
+    openCloudBtn.addEventListener('click', () => openModal(cloudOverlay, renderCloud));
+    cloudCloseBtn.addEventListener('click', () => closeModal(cloudOverlay));
+    cloudOverlay.addEventListener('click', (e) => { if (e.target === cloudOverlay) closeModal(cloudOverlay); });
+    cloudSaveBtn.addEventListener('click', cloudSaveNow);
+    cloudRestoreBtn.addEventListener('click', cloudRestore);
+
+    // 起動時：あいことば設定済みなら、クラウドの新しい記録を取りに行く（last-write-wins）
+    async function maybeSyncFromCloud() {
+      if (!window.CloudSync || !CloudSync.enabled()) return;
+      const cred = CloudSync.getCred();
+      if (!cred) return;
+      const remote = await CloudSync.pull(cred.nickname, cred.secretHash);
+      if (!remote) return;
+      const localAt = save._syncedAt || '';
+      const remoteAt = remote._syncedAt || '';
+      if (remoteAt && remoteAt > localAt) {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(remote));
+        loadSave();
+        updateStatusChips();
+        updateDailyHint();
+        renderPandaOutfit();
+      }
+    }
+
+    /* =========================================================
        セクション19: イベント登録・初期化
     ========================================================= */
     chargeBtn.addEventListener('pointerdown', onTap);
@@ -2214,7 +2351,11 @@
     // 起動時：条件をすでに満たしている着せ替えを解放し、装着中のものを反映
     if (checkOutfitUnlocks().length) persist();
     renderPandaOutfit();
+    // 起動時：あいことば設定済みなら、クラウドの新しい記録を取りに行く
+    // （cloud-sync.js はこの下で読み込まれるので、load後に実行してCloudSync未定義を避ける）
+    window.addEventListener('load', function () { maybeSyncFromCloud(); });
   </script>
+  <script src="cloud-sync.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
