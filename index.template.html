@@ -216,6 +216,21 @@
       image-rendering: -webkit-optimize-contrast;
       filter: drop-shadow(0 8px 14px rgba(7,156,21,0.22));
     }
+    /* 着せ替え絵文字オーバーレイ（パンダさんの頭のうえ） */
+    .panda-outfit {
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2.6rem;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 3;
+      display: none;
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.22));
+      animation: idleFloat 3s ease-in-out infinite;
+    }
+    .panda-outfit.show { display: block; }
 
     /* 充電中のぷるぷる */
     @keyframes wobble {
@@ -958,6 +973,7 @@
       <div class="panda-stage">
         <img class="panda-body" src="{{ASSET_1}}" alt="充電中のパンダさん">
         <img class="panda-face" src="{{ASSET_2}}" alt="満タンのパンダさん" id="pandaFace">
+        <div class="panda-outfit" id="pandaOutfit"></div>
         <div class="panda-bubble" id="pandaBubble"></div>
       </div>
 
@@ -1006,6 +1022,7 @@
 
       <div class="nav-row" id="navRow">
         <button class="nav-btn" id="openDexBtn" type="button"><span class="nav-emoji">📖</span>ずかん</button>
+        <button class="nav-btn" id="openOutfitBtn" type="button"><span class="nav-emoji">👒</span>きせかえ</button>
         <button class="nav-btn" id="openAchBtn" type="button"><span class="nav-emoji">🏆</span>じっせき</button>
       </div>
     </div>
@@ -1025,6 +1042,19 @@
       <div class="dex-progress" id="dexProgress">コンプ率 0%（0/30）</div>
       <div id="dexBody"></div>
       <div class="dex-since" id="dexSince"></div>
+    </div>
+  </div>
+
+  <!-- きせかえモーダル -->
+  <div class="modal-overlay" id="outfitOverlay">
+    <div class="modal-sheet" id="outfitSheet">
+      <div class="modal-head">
+        <span class="modal-title">👒 きせかえ</span>
+        <button class="modal-close" id="outfitCloseBtn" type="button">✕</button>
+      </div>
+      <div class="modal-sub" id="outfitProgress"></div>
+      <div class="outfit-grid" id="outfitBody"></div>
+      <div class="dex-since">充電をがんばると、あたらしいきせかえがもらえるよ🎁</div>
     </div>
   </div>
 
@@ -1146,6 +1176,17 @@
       return Object.keys(s.cards || {}).filter(k => s.cards[k] > 0).length;
     }
 
+    // 着せ替え定義（A案：充電をがんばると条件で自動解放。買うのではなく"がんばりのごほうび"）
+    // id, 絵文字, 名前, 解放条件の説明文(hint), 判定関数(save)
+    const OUTFITS = [
+      { id:'hat',    emoji:'🎓', name:'はかせ帽',   hint:'充電を10回する',        check: s => s.charges >= 10 },
+      { id:'ribbon', emoji:'🎀', name:'リボン',     hint:'3日れんぞくで充電する',  check: s => s.streak.count >= 3 },
+      { id:'cap',    emoji:'🧢', name:'キャップ',   hint:'充電を50回する',        check: s => s.charges >= 50 },
+      { id:'sasa',   emoji:'🎋', name:'笹かんむり', hint:'ずかんを半分あつめる',  check: s => dexOwnedCount(s) / CARD_TOTAL >= 0.5 },
+      { id:'flower', emoji:'🌸', name:'お花',       hint:'フィーバーを10回する',  check: s => s.fevers >= 10 },
+      { id:'crown',  emoji:'👑', name:'クラウン',   hint:'ずかんをコンプする',    check: s => dexOwnedCount(s) >= CARD_TOTAL }
+    ];
+
     /* =========================================================
        セクション2: セーブデータ（localStorage）
     ========================================================= */
@@ -1156,6 +1197,8 @@
         streak: { last: '', count: 0 },
         cards: {},
         ach: [],
+        outfit: null,
+        unlockedOutfits: {},
         sound: true,
         since: ''
       };
@@ -1176,6 +1219,8 @@
           streak: (parsed.streak && typeof parsed.streak.count === 'number') ? { last: parsed.streak.last || '', count: parsed.streak.count } : d.streak,
           cards: (parsed.cards && typeof parsed.cards === 'object') ? parsed.cards : d.cards,
           ach: Array.isArray(parsed.ach) ? parsed.ach : d.ach,
+          outfit: typeof parsed.outfit === 'string' ? parsed.outfit : d.outfit,
+          unlockedOutfits: (parsed.unlockedOutfits && typeof parsed.unlockedOutfits === 'object') ? parsed.unlockedOutfits : d.unlockedOutfits,
           sound: typeof parsed.sound === 'boolean' ? parsed.sound : d.sound,
           since: typeof parsed.since === 'string' ? parsed.since : d.since
         };
@@ -1245,6 +1290,12 @@
     const achCloseBtn = document.getElementById('achCloseBtn');
     const achList = document.getElementById('achList');
     const achProgress = document.getElementById('achProgress');
+    const openOutfitBtn = document.getElementById('openOutfitBtn');
+    const outfitOverlay = document.getElementById('outfitOverlay');
+    const outfitCloseBtn = document.getElementById('outfitCloseBtn');
+    const outfitBody = document.getElementById('outfitBody');
+    const outfitProgress = document.getElementById('outfitProgress');
+    const pandaOutfit = document.getElementById('pandaOutfit');
     const cardZoomOverlay = document.getElementById('cardZoomOverlay');
     const zoomFront = document.getElementById('zoomFront');
     const zoomRarityLabel = document.getElementById('zoomRarityLabel');
@@ -1769,14 +1820,17 @@
       return newly;
     }
     function queueAchToast(a) {
-      achToastQueue.push(a);
+      queueToast('🏆実績解除！' + a.name);
+    }
+    function queueToast(text) {
+      achToastQueue.push(text);
       if (!achToastShowing) showNextAchToast();
     }
     function showNextAchToast() {
-      const a = achToastQueue.shift();
-      if (!a) { achToastShowing = false; return; }
+      const text = achToastQueue.shift();
+      if (text === undefined) { achToastShowing = false; return; }
       achToastShowing = true;
-      achToast.textContent = '🏆実績解除！' + a.name;
+      achToast.textContent = text;
       achToast.classList.add('show');
       playTone(1200, 0.15, 'sine', 0.09);
       playTone(1600, 0.18, 'sine', 0.09, 0.12);
@@ -1845,6 +1899,10 @@
       } else {
         achBanner.classList.add('hidden');
       }
+
+      // 着せ替え解放判定（がんばりのごほうび）
+      const newOutfits = checkOutfitUnlocks();
+      newOutfits.forEach(o => queueToast('👒きせかえ解放！' + o.emoji + o.name));
 
       persist();
 
@@ -2056,6 +2114,70 @@
     }
 
     /* =========================================================
+       セクション17.5: きせかえモーダル
+    ========================================================= */
+    // 条件を満たした着せ替えを解放。新しく解放されたものの配列を返す
+    function checkOutfitUnlocks() {
+      save.unlockedOutfits = save.unlockedOutfits || {};
+      const newly = [];
+      OUTFITS.forEach(o => {
+        if (!save.unlockedOutfits[o.id]) {
+          try {
+            if (o.check(save)) {
+              save.unlockedOutfits[o.id] = true;
+              newly.push(o);
+            }
+          } catch (e) { /* 判定失敗はスキップ */ }
+        }
+      });
+      return newly;
+    }
+    // パンダさんに着せ替え絵文字を反映
+    function renderPandaOutfit() {
+      const o = OUTFITS.find(x => x.id === save.outfit);
+      if (o && save.unlockedOutfits && save.unlockedOutfits[o.id]) {
+        pandaOutfit.textContent = o.emoji;
+        pandaOutfit.classList.add('show');
+      } else {
+        pandaOutfit.textContent = '';
+        pandaOutfit.classList.remove('show');
+      }
+    }
+    function renderOutfit() {
+      // モーダルを開いたときにも念のため条件チェック（充電外での解放にも対応）
+      checkOutfitUnlocks();
+      save.unlockedOutfits = save.unlockedOutfits || {};
+      const unlockedCount = OUTFITS.filter(o => save.unlockedOutfits[o.id]).length;
+      outfitProgress.textContent = 'あつめた着せ替え ' + unlockedCount + ' / ' + OUTFITS.length +
+        (save.outfit ? '' : '（タップでパンダさんに着せてあげてね）');
+      outfitBody.innerHTML = OUTFITS.map(o => {
+        const unlocked = !!save.unlockedOutfits[o.id];
+        const equipped = save.outfit === o.id;
+        let cls = 'outfit-cell';
+        let state;
+        if (equipped) { cls += ' equipped'; state = '着せてるよ♪'; }
+        else if (unlocked) { state = 'タップで着せる'; }
+        else { cls += ' locked'; state = '🔒 ' + o.hint; }
+        return '<div class="' + cls + '" data-outfit-id="' + o.id + '">' +
+          '<span class="outfit-emoji">' + o.emoji + '</span>' + o.name +
+          '<span class="outfit-state">' + state + '</span></div>';
+      }).join('');
+      outfitBody.querySelectorAll('.outfit-cell[data-outfit-id]').forEach(el => {
+        el.addEventListener('click', () => onOutfitTap(el.getAttribute('data-outfit-id')));
+      });
+    }
+    function onOutfitTap(id) {
+      save.unlockedOutfits = save.unlockedOutfits || {};
+      if (!save.unlockedOutfits[id]) return; // 未解放は何もしない
+      // 装着中をもう一度タップ→はずす、それ以外→着せ替え
+      save.outfit = (save.outfit === id) ? null : id;
+      persist();
+      renderOutfit();
+      renderPandaOutfit();
+      playTone(880, 0.12, 'sine', 0.08);
+    }
+
+    /* =========================================================
        セクション18: モーダル開閉共通処理
     ========================================================= */
     function openModal(overlay, renderFn) {
@@ -2067,10 +2189,13 @@
     }
     openDexBtn.addEventListener('click', () => openModal(dexOverlay, renderDex));
     openAchBtn.addEventListener('click', () => openModal(achOverlay, renderAch));
+    openOutfitBtn.addEventListener('click', () => openModal(outfitOverlay, renderOutfit));
     dexCloseBtn.addEventListener('click', () => closeModal(dexOverlay));
     achCloseBtn.addEventListener('click', () => closeModal(achOverlay));
+    outfitCloseBtn.addEventListener('click', () => closeModal(outfitOverlay));
     dexOverlay.addEventListener('click', (e) => { if (e.target === dexOverlay) closeModal(dexOverlay); });
     achOverlay.addEventListener('click', (e) => { if (e.target === achOverlay) closeModal(achOverlay); });
+    outfitOverlay.addEventListener('click', (e) => { if (e.target === outfitOverlay) closeModal(outfitOverlay); });
 
     /* =========================================================
        セクション19: イベント登録・初期化
@@ -2086,6 +2211,9 @@
 
     applyTimeTheme();
     setPercent(0);
+    // 起動時：条件をすでに満たしている着せ替えを解放し、装着中のものを反映
+    if (checkOutfitUnlocks().length) persist();
+    renderPandaOutfit();
   </script>
   <script>
     if ('serviceWorker' in navigator) {
