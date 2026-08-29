@@ -971,6 +971,16 @@
       -webkit-backface-visibility: visible;
     }
 
+    .card-zoom-img {
+      display: none;
+      width: 76%;
+      border-radius: 12px;
+      border: 3px solid rgba(255,255,255,0.75);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+      margin: 6px auto 8px;
+    }
+    .card-zoom-img.show { display: block; }
+
     /* 実績一覧 */
     .ach-list { display: flex; flex-direction: column; gap: 8px; }
     .ach-item {
@@ -1132,6 +1142,7 @@
     <div class="card-zoom-inner">
       <div class="draw-face draw-front" id="zoomFront" style="position:relative;height:280px;border-radius:18px;">
         <span class="draw-rarity-label" id="zoomRarityLabel">N</span>
+        <img class="card-zoom-img" id="zoomImg" alt="">
         <div class="draw-name" id="zoomName">―</div>
         <div class="draw-body" id="zoomBody">―</div>
       </div>
@@ -1145,6 +1156,8 @@
     /* =========================================================
        セクション1: カードプール・実績定義・称号定義（データ）
     ========================================================= */
+    /* カードイラスト（ある子だけタップで絵が出る。base64はビルド時に注入） */
+    const CARD_IMAGES = {{CARD_IMAGES}};
     const CARD_POOL = {
       N: [
         { id:'n01', name:'がんばりみとめ', body:'きみは今日もよくがんばってるよ🐼' },
@@ -1359,6 +1372,7 @@
     const cardZoomOverlay = document.getElementById('cardZoomOverlay');
     const zoomFront = document.getElementById('zoomFront');
     const zoomRarityLabel = document.getElementById('zoomRarityLabel');
+    const zoomImg = document.getElementById('zoomImg');
     const zoomName = document.getElementById('zoomName');
     const zoomBody = document.getElementById('zoomBody');
     const achToast = document.getElementById('achToast');
@@ -2154,6 +2168,17 @@
       zoomRarityLabel.textContent = c.rarity;
       zoomName.textContent = c.name;
       zoomBody.textContent = c.body;
+      if (CARD_IMAGES[id]) {
+        zoomImg.src = CARD_IMAGES[id];
+        zoomImg.classList.add('show');
+        zoomFront.style.height = 'auto';
+        zoomFront.style.minHeight = '280px';
+      } else {
+        zoomImg.classList.remove('show');
+        zoomImg.removeAttribute('src');
+        zoomFront.style.height = '280px';
+        zoomFront.style.minHeight = '';
+      }
       cardZoomOverlay.classList.add('show');
     }
     cardZoomOverlay.addEventListener('click', () => cardZoomOverlay.classList.remove('show'));
