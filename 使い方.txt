@@ -42,7 +42,7 @@
 ・使い方.txt ……… このファイル
 
 ■ 公開ページ
-https://fuyutosan.github.io/panda-charger/
+https://panda-charger.pages.dev/
 
 ========================================
 作: メイメイ（@meimei_pandasan）🐼
