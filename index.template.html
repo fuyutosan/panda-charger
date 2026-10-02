@@ -372,6 +372,14 @@
       font-weight: 700;
     }
 
+    /* 充電が進むほどパンダさんが金色に光る（--charge は 0〜1。JSが更新） */
+    .card.charging .panda-stage img {
+      filter: drop-shadow(0 0 calc(4px + var(--charge, 0) * 22px) rgba(255, 200, 0, calc(0.25 + var(--charge, 0) * 0.65))) drop-shadow(0 8px 14px rgba(7,156,21,0.22));
+    }
+    /* タップのたびにパンダさんがぽよんと反応 */
+    .panda-stage.bump { animation: stageBump 0.14s ease; }
+    @keyframes stageBump { 0% { transform: scale(1); } 45% { transform: scale(1.06) rotate(var(--tilt, 0deg)); } 100% { transform: scale(1); } }
+
     /* 充電ボタン */
     .charge-btn {
       font-family: 'Noto Sans JP', sans-serif;
@@ -1727,6 +1735,7 @@
     /* =========================================================
        セクション10: メインゲームロジック（連打充電）
     ========================================================= */
+    const pandaStageEl = document.querySelector('.panda-stage');
     let mode = 'idle';        // idle | rapid | complete
     let percent = 0;
     let combo = 0;
@@ -1741,6 +1750,7 @@
     function setPercent(p) {
       percent = Math.max(0, Math.min(100, p));
       fill.style.width = percent + '%';
+      card.style.setProperty('--charge', (percent / 100).toFixed(3));
       pct.textContent = Math.round(percent) + '%';
     }
 
@@ -1778,6 +1788,14 @@
       let gain = Math.min(6, 2 + Math.floor(combo / 3));
       if (feverActive) gain *= 2;
       setPercent(percent + gain);
+
+      // パンダさんがぽよん（左右にちょっと傾く）
+      if (pandaStageEl) {
+        pandaStageEl.style.setProperty('--tilt', (Math.random() * 6 - 3).toFixed(1) + 'deg');
+        pandaStageEl.classList.remove('bump');
+        void pandaStageEl.offsetWidth;
+        pandaStageEl.classList.add('bump');
+      }
 
       // ボタン震え（連続発火のためリフローで再生）
       chargeBtn.classList.remove('hit');
