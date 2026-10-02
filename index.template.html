@@ -932,6 +932,37 @@
       margin: 12px 0 4px;
     }
 
+    /* はじめてのチュートリアル */
+    .tut-overlay {
+      position: fixed; inset: 0; z-index: 120;
+      background: rgba(10, 40, 14, 0.72);
+      display: flex; align-items: center; justify-content: center;
+      padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    }
+    .tut-overlay.show { opacity: 1; pointer-events: auto; }
+    .tut-sheet {
+      width: 100%; max-width: 360px; max-height: 100%; overflow-y: auto;
+      background: var(--paper); border-radius: 24px; padding: 22px 20px 18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35); text-align: center;
+      transform: translateY(14px) scale(0.97); transition: transform 0.3s cubic-bezier(.2,1.2,.4,1);
+    }
+    .tut-overlay.show .tut-sheet { transform: none; }
+    .tut-pic { height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+    .tut-pic img { max-height: 100%; max-width: 70%; filter: drop-shadow(0 6px 10px rgba(7,156,21,0.25)); }
+    .tut-pic img.tut-card { max-width: 150px; border-radius: 14px; border: 3px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.25); transform: rotate(-4deg); }
+    .tut-pic .tut-emoji { font-size: 4.6rem; line-height: 1; }
+    .tut-title { font-weight: 900; font-size: 1.15rem; color: var(--mei); margin-bottom: 8px; line-height: 1.4; }
+    .tut-text { font-size: 0.92rem; font-weight: 700; color: #3a5a3e; line-height: 1.7; min-height: 5.2em; }
+    .tut-dots { display: flex; justify-content: center; gap: 7px; margin: 14px 0 12px; }
+    .tut-dots i { width: 8px; height: 8px; border-radius: 50%; background: #cfe6cf; transition: all 0.2s ease; }
+    .tut-dots i.on { width: 22px; border-radius: 999px; background: var(--mei); }
+    .tut-form { display: none; text-align: left; }
+    .tut-form.show { display: block; }
+    .tut-note { font-size: 0.74rem; font-weight: 700; color: #6a8a6a; margin: 0 0 8px; line-height: 1.5; }
+    .tut-skip { background: none; border: none; color: #6a8a6a; font-family: inherit; font-weight: 700; font-size: 0.82rem; cursor: pointer; padding: 10px 6px 2px; }
+    .foot-link { background: none; border: none; font-family: inherit; color: var(--mei); font-weight: 700; font-size: inherit; text-decoration: underline; cursor: pointer; padding: 0; }
+
     /* ずかんグリッド */
     .dex-section-title {
       font-weight: 900;
@@ -1153,7 +1184,7 @@
   </div>
 
   <footer>
-    🐼 <a href="https://meimei-56p.pages.dev/">メイメイのお家</a> ｜ <a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a> 💚
+    <button class="foot-link" id="openTutBtn" type="button">❓ あそびかた</button> ｜ 🐼 <a href="https://meimei-56p.pages.dev/">メイメイのお家</a> ｜ <a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a> 💚
   </footer>
 
   <!-- ずかんモーダル -->
@@ -1208,6 +1239,25 @@
       </div>
       <budoux-ja class="modal-sub" id="achProgress"></budoux-ja>
       <div class="ach-list" id="achList"></div>
+    </div>
+  </div>
+
+  <!-- はじめてのチュートリアル（4画面。最後があいことば入力） -->
+  <div class="tut-overlay" id="tutOverlay" role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+    <div class="tut-sheet">
+      <div class="tut-pic" id="tutPic"></div>
+      <div class="tut-title" id="tutTitle"></div>
+      <div class="tut-text" id="tutText"></div>
+      <div class="tut-form" id="tutForm">
+        <input id="tut-name" class="cloud-input" type="text" maxlength="16" placeholder="なまえ（ニックネーム）" autocomplete="off">
+        <input id="tut-secret" class="cloud-input" type="text" maxlength="16" placeholder="あいことば（記録を守る合言葉）" autocomplete="off">
+        <p class="tut-note"><budoux-ja>あいことばは、なまえとセットで記録を呼び出すカギ。ほかの人に知られない言葉にしてね。</budoux-ja></p>
+      </div>
+      <div class="cloud-msg" id="tutMsg" aria-live="polite"></div>
+      <div class="tut-dots" id="tutDots"></div>
+      <button class="cloud-btn cloud-btn-main" id="tutNextBtn" type="button">つぎへ</button>
+      <button class="cloud-btn cloud-btn-sub" id="tutRestoreBtn" type="button" style="display:none;">📲 別のスマホの記録を呼び出す</button>
+      <button class="tut-skip" id="tutSkipBtn" type="button">スキップ</button>
     </div>
   </div>
 
@@ -2424,28 +2474,30 @@
         cloudTell('');
       }
     }
-    // このスマホの記録をクラウドに保存（初回）
-    async function cloudSaveNow() {
-      const nm = cloudNameInput.value.trim();
-      const sc = cloudSecretInput.value.trim();
-      if (!nm || !sc) { cloudTell('なまえとあいことばの両方を入れてね🐼'); return; }
-      if (!window.CloudSync || !CloudSync.enabled()) { cloudTell('いまは保存の準備中だよ。もう少し待ってね🐼'); return; }
-      cloudTell('保存してるよ…☁️');
-      const hash = await CloudSync.hashSecret(nm, sc);
-      CloudSync.saveCred(nm, hash);
-      await CloudSync.pushNow(save);
-      cloudTell('保存できたよ！これで別のスマホでも「' + nm + '」＋あいことばで続きからあそべるよ🐼✨');
+    // このスマホの記録をクラウドに保存（初回）。成功したら true
+    async function cloudDoSave(nm, sc, tell) {
+      if (!nm || !sc) { tell('なまえとあいことばの両方を入れてね🐼'); return false; }
+      if (!window.CloudSync || !CloudSync.enabled()) { tell('いまは保存の準備中だよ。もう少し待ってね🐼'); return false; }
+      tell('保存してるよ…☁️');
+      try {
+        const hash = await CloudSync.hashSecret(nm, sc);
+        CloudSync.saveCred(nm, hash);
+        await CloudSync.pushNow(save);
+      } catch (e) { tell('うまく保存できなかったよ。通信をたしかめて、もう一度ためしてね'); return false; }
+      tell('保存できたよ！これで別のスマホでも「' + nm + '」＋あいことばで続きからあそべるよ🐼✨');
+      return true;
     }
-    // 別のスマホで作った記録・消えた記録を呼び出す
-    async function cloudRestore() {
-      const nm = cloudNameInput.value.trim();
-      const sc = cloudSecretInput.value.trim();
-      if (!nm || !sc) { cloudTell('なまえとあいことばの両方を入れてね🐼'); return; }
-      if (!window.CloudSync || !CloudSync.enabled()) { cloudTell('いまは呼び出しの準備中だよ。もう少し待ってね🐼'); return; }
-      cloudTell('さがしてるよ…🐼');
-      const hash = await CloudSync.hashSecret(nm, sc);
-      const remote = await CloudSync.pull(nm, hash);
-      if (!remote) { cloudTell('そのなまえとあいことばの記録は見つからなかったよ。入力をたしかめてね'); return; }
+    // 別のスマホで作った記録・消えた記録を呼び出す。成功したら true
+    async function cloudDoRestore(nm, sc, tell) {
+      if (!nm || !sc) { tell('なまえとあいことばの両方を入れてね🐼'); return false; }
+      if (!window.CloudSync || !CloudSync.enabled()) { tell('いまは呼び出しの準備中だよ。もう少し待ってね🐼'); return false; }
+      tell('さがしてるよ…🐼');
+      let remote = null, hash = '';
+      try {
+        hash = await CloudSync.hashSecret(nm, sc);
+        remote = await CloudSync.pull(nm, hash);
+      } catch (e) { remote = null; }
+      if (!remote) { tell('そのなまえとあいことばの記録は見つからなかったよ。入力をたしかめてね'); return false; }
       localStorage.setItem(SAVE_KEY, JSON.stringify(remote));
       loadSave();
       CloudSync.saveCred(nm, hash);
@@ -2453,13 +2505,105 @@
       updateStatusChips();
       updateDailyHint();
       renderPandaOutfit();
-      cloudTell('おかえり！記録が見つかったよ🐼 続きからあそべるよ');
+      tell('おかえり！記録が見つかったよ🐼 続きからあそべるよ');
+      return true;
     }
+    function cloudSaveNow() { return cloudDoSave(cloudNameInput.value.trim(), cloudSecretInput.value.trim(), cloudTell); }
+    function cloudRestore() { return cloudDoRestore(cloudNameInput.value.trim(), cloudSecretInput.value.trim(), cloudTell); }
     openCloudBtn.addEventListener('click', () => openModal(cloudOverlay, renderCloud));
     cloudCloseBtn.addEventListener('click', () => closeModal(cloudOverlay));
     cloudOverlay.addEventListener('click', (e) => { if (e.target === cloudOverlay) closeModal(cloudOverlay); });
     cloudSaveBtn.addEventListener('click', cloudSaveNow);
     cloudRestoreBtn.addEventListener('click', cloudRestore);
+
+    /* =========================================================
+       セクション18.6: はじめてのチュートリアル（4画面＋最後にあいことば入力）
+       出す条件：まだ一度もチュートリアルを終えておらず、充電0回・カード0枚の人だけ。
+       「❓あそびかた」からはいつでも見直せる（あいことば設定済みなら最後の画面は省く）。
+    ========================================================= */
+    const TUT_KEY = 'ppc_tutorial_v1';
+    const tutOverlay = document.getElementById('tutOverlay');
+    const tutPic = document.getElementById('tutPic');
+    const tutTitle = document.getElementById('tutTitle');
+    const tutText = document.getElementById('tutText');
+    const tutForm = document.getElementById('tutForm');
+    const tutDots = document.getElementById('tutDots');
+    const tutNextBtn = document.getElementById('tutNextBtn');
+    const tutRestoreBtn = document.getElementById('tutRestoreBtn');
+    const tutSkipBtn = document.getElementById('tutSkipBtn');
+    const tutMsg = document.getElementById('tutMsg');
+    const tutName = document.getElementById('tut-name');
+    const tutSecret = document.getElementById('tut-secret');
+    let tutStep = 0;
+    let tutSteps = [];
+
+    function tutDone() { try { localStorage.setItem(TUT_KEY, '1'); } catch (e) {} }
+    function tutSeen() { try { return localStorage.getItem(TUT_KEY) === '1'; } catch (e) { return false; } }
+    function tutBuildSteps() {
+      const bodySrc = document.querySelector('.panda-body').getAttribute('src');
+      const steps = [
+        { pic: '<img src="' + bodySrc + '" alt="">', title: 'ようこそ！パンダさんパワー充電器へ',
+          text: 'まんなかの大きなボタンを、れんだ！れんだ！\n100%まで充電したら、今日のカードがもらえるよ⚡' },
+        { pic: '<div class="tut-emoji" aria-hidden="true">🔥🎋</div>', title: '速くたたくと、コンボ！',
+          text: 'コンボがつながるほど、たまる量がアップ。ときどき飛んでくる金の笹🎋をタップすると、6秒間パワー2倍のフィーバーになるよ！' },
+        { pic: '<img class="tut-card" src="' + (CARD_IMAGES.u01 || '') + '" alt="">', title: 'カードを集めよう',
+          text: '全30種のパンダさんずかん。集めるときせかえや実績も解放されるよ。1日のはじめの充電は、レア以上が確定のボーナス🎁' }
+      ];
+      const hasCred = window.CloudSync && CloudSync.getCred && CloudSync.getCred();
+      if (!hasCred) {
+        steps.push({ pic: '<div class="tut-emoji" aria-hidden="true">☁️</div>', title: '記録をのこそう', form: true,
+          text: 'なまえとあいことばを決めておくと、スマホを変えても、データが消えても、続きからあそべるよ。あとからでも決められるよ。' });
+      }
+      return steps;
+    }
+    function tutRender() {
+      const s = tutSteps[tutStep];
+      const last = tutStep === tutSteps.length - 1;
+      tutPic.innerHTML = s.pic;
+      tutTitle.innerHTML = '<budoux-ja>' + s.title + '</budoux-ja>';
+      tutText.innerHTML = '<budoux-ja>' + s.text.replace(/\n/g, '<br>') + '</budoux-ja>';
+      tutForm.classList.toggle('show', !!s.form);
+      tutRestoreBtn.style.display = s.form ? 'block' : 'none';
+      tutMsg.textContent = '';
+      tutDots.innerHTML = tutSteps.map(function (_, i) { return '<i class="' + (i === tutStep ? 'on' : '') + '"></i>'; }).join('');
+      if (s.form) { tutNextBtn.textContent = '💾 これで記録する'; tutSkipBtn.textContent = 'あとで決める'; }
+      else { tutNextBtn.textContent = last ? 'はじめる！' : 'つぎへ'; tutSkipBtn.textContent = 'スキップ'; }
+    }
+    function tutOpen() {
+      tutSteps = tutBuildSteps();
+      tutStep = 0;
+      tutRender();
+      tutOverlay.classList.add('show');
+      tutNextBtn.focus();
+    }
+    function tutClose() {
+      tutOverlay.classList.remove('show');
+      tutDone();
+    }
+    async function tutNext() {
+      const s = tutSteps[tutStep];
+      if (s.form) {
+        const ok = await cloudDoSave(tutName.value.trim(), tutSecret.value.trim(), function (t) { tutMsg.textContent = t; });
+        if (ok) setTimeout(tutClose, 1600);
+        return;
+      }
+      if (tutStep < tutSteps.length - 1) { tutStep++; tutRender(); } else { tutClose(); }
+    }
+    tutNextBtn.addEventListener('click', tutNext);
+    tutSkipBtn.addEventListener('click', tutClose);
+    tutRestoreBtn.addEventListener('click', async function () {
+      const ok = await cloudDoRestore(tutName.value.trim(), tutSecret.value.trim(), function (t) { tutMsg.textContent = t; });
+      if (ok) setTimeout(tutClose, 1600);
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tutOverlay.classList.contains('show')) tutClose(); });
+    document.getElementById('openTutBtn').addEventListener('click', tutOpen);
+
+    // 起動時：はじめての人にだけ自動で出す（既存のプレイヤーには出さない）
+    if (!tutSeen() && save.charges === 0 && dexOwnedCount(save) === 0) {
+      setTimeout(tutOpen, 700);
+    } else if (!tutSeen()) {
+      tutDone(); // すでに遊んでいる人は「見たこと」にして二度と自動では出さない
+    }
 
     // 起動時：あいことば設定済みなら、クラウドの新しい記録を取りに行く（last-write-wins）
     async function maybeSyncFromCloud() {
