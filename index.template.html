@@ -45,6 +45,10 @@
     body { word-break: keep-all; overflow-wrap: anywhere; text-wrap: pretty; }
     h1, h2, h3 { text-wrap: balance; }
     .nb { white-space: nowrap; }
+    /* 動きが苦手な人向け：OSの「視差効果を減らす」に従い、ゆらゆら・ホロ・キラキラの常時アニメを止める */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition-duration: 0.001s !important; }
+    }
     :where(budoux-ja[id]) { display: block; }
 
     body {
@@ -1011,6 +1015,26 @@
     }
     .card-zoom-img.show { display: block; }
 
+    /* きせかえ一覧 */
+    .outfit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .outfit-cell {
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px;
+      padding: 10px 4px 8px; min-height: 118px;
+      border-radius: 14px; background: rgba(255,255,255,0.8);
+      border: 2px solid rgba(7,156,21,0.22);
+      font-size: 0.74rem; font-weight: 800; color: #2a5a30; text-align: center; line-height: 1.3;
+      cursor: pointer; word-break: keep-all; overflow-wrap: anywhere;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .outfit-cell:active { transform: scale(0.96); }
+    .outfit-emoji { font-size: 2.1rem; line-height: 1.2; }
+    .outfit-state { font-size: 0.62rem; font-weight: 700; color: #5f8a63; margin-top: 2px; }
+    .outfit-cell.equipped { background: linear-gradient(135deg, #fffbe6, #fff3c4); border-color: #f1c232; box-shadow: 0 2px 10px rgba(241,194,50,0.4); }
+    .outfit-cell.equipped .outfit-state { color: #b8860b; }
+    .outfit-cell.locked { cursor: default; background: rgba(255,255,255,0.45); border-style: dashed; color: #7a8a7a; }
+    .outfit-cell.locked .outfit-emoji { filter: grayscale(1); opacity: 0.45; }
+    .outfit-cell.locked:active { transform: none; }
+
     /* 実績一覧 */
     .ach-list { display: flex; flex-direction: column; gap: 8px; }
     .ach-item {
@@ -1022,7 +1046,18 @@
       padding: 10px 12px;
       border: 1.5px solid rgba(7,156,21,0.15);
     }
-    .ach-item.locked { opacity: 0.55; filter: grayscale(0.6); }
+    .ach-item.locked { background: rgba(255,255,255,0.5); border-style: dashed; }
+    .ach-item.locked .ach-name { color: #6a7d6a; }
+    .ach-item.done { background: linear-gradient(135deg, #fffbe6, #fff3c4); border-color: #f1c232; box-shadow: 0 2px 8px rgba(241,194,50,0.28); }
+    .ach-text { flex: 1; min-width: 0; }
+    .ach-bar { height: 7px; border-radius: 999px; background: rgba(7,156,21,0.14); margin-top: 6px; overflow: hidden; }
+    .ach-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--mei-light), #9be15d); }
+    .ach-prog { font-size: 0.64rem; font-weight: 800; color: #6a8a6a; margin-top: 2px; text-align: right; }
+    .ach-stamp {
+      flex-shrink: 0; font-size: 0.62rem; font-weight: 900; color: #b8860b;
+      border: 2px solid #d4a017; border-radius: 8px; padding: 2px 6px; transform: rotate(-8deg);
+      background: rgba(255,255,255,0.7);
+    }
     .ach-icon {
       width: 38px; height: 38px;
       border-radius: 50%;
@@ -1031,7 +1066,7 @@
       background: linear-gradient(135deg, #ffd700, #ff8c00);
       flex-shrink: 0;
     }
-    .ach-item.locked .ach-icon { background: #ccc; }
+    .ach-item.locked .ach-icon { background: #d9dfd9; filter: grayscale(1); }
     .ach-name { font-weight: 800; font-size: 0.86rem; color: #2a5a30; }
     .ach-desc { font-size: 0.72rem; color: #6a8a6a; }
   </style>
@@ -1073,7 +1108,7 @@
         累計 <span id="totalPowerNum" style="font-size:1.6em;letter-spacing:0.02em;">…</span> パワー！
       </div>
 
-      <div class="result" id="result">
+      <div class="result" id="result" role="status" aria-live="polite">
         <div class="done-title"><budoux-ja>🎉充電完了🔋<span class="nb">パンダさんパワーMAX</span>🐼🔥</budoux-ja></div>
         <div class="daily-bonus-banner hidden" id="dailyBonusBanner">🎁 デイリーボーナス！レア以上のカードが出たよ</div>
 
@@ -1256,22 +1291,22 @@
 
     // 実績定義: id, 名前, 説明, 判定関数(save, ctx)
     const ACHIEVEMENTS = [
-      { id:'first', name:'はじめての充電', desc:'充電を1回完了する', check: s => s.charges >= 1 },
-      { id:'c10', name:'充電じゅっかい', desc:'充電を10回完了する', check: s => s.charges >= 10 },
-      { id:'c50', name:'充電マニア', desc:'充電を50回完了する', check: s => s.charges >= 50 },
-      { id:'c100', name:'充電のきわみ', desc:'充電を100回完了する', check: s => s.charges >= 100 },
-      { id:'combo10', name:'コンボ10！', desc:'コンボを10つなげる', check: s => s.bestCombo >= 10 },
-      { id:'combo15', name:'コンボ15！！', desc:'コンボを15つなげる', check: s => s.bestCombo >= 15 },
-      { id:'combo20', name:'神の連打', desc:'コンボを20つなげる（途切れさせずに満タン直前まで！）', check: s => s.bestCombo >= 20 },
-      { id:'fever', name:'はじめてのフィーバー', desc:'ゴールデン笹フィーバーを体験する', check: s => s.fevers >= 1 },
-      { id:'streak3', name:'3日連続', desc:'3日連続で充電する', check: s => s.streak.count >= 3 },
-      { id:'streak7', name:'1週間連続', desc:'7日連続で充電する', check: s => s.streak.count >= 7 },
-      { id:'streak30', name:'1ヶ月連続', desc:'30日連続で充電する', check: s => s.streak.count >= 30 },
-      { id:'morning', name:'あさの充電', desc:'朝5〜9時に充電を完了する', check: (s, ctx) => !!(ctx && ctx.morning) },
-      { id:'night', name:'よふかし充電', desc:'深夜0〜4時に充電を完了する', check: (s, ctx) => !!(ctx && ctx.night) },
-      { id:'pet10', name:'なでなで10回', desc:'パンダさんを10回なでる', check: s => s.pets >= 10 },
-      { id:'dex50', name:'ずかん半分', desc:'コンプ率50%達成', check: s => dexOwnedCount(s) / CARD_TOTAL >= 0.5 },
-      { id:'dex100', name:'ずかんコンプ！', desc:'すべてのカードを集める', check: s => dexOwnedCount(s) >= CARD_TOTAL }
+      { id:'first', icon:'🔋', prog:s=>[s.charges,1], name:'はじめての充電', desc:'充電を1回完了する', check: s => s.charges >= 1 },
+      { id:'c10', icon:'⚡', prog:s=>[s.charges,10], name:'充電じゅっかい', desc:'充電を10回完了する', check: s => s.charges >= 10 },
+      { id:'c50', icon:'🔥', prog:s=>[s.charges,50], name:'充電マニア', desc:'充電を50回完了する', check: s => s.charges >= 50 },
+      { id:'c100', icon:'🌟', prog:s=>[s.charges,100], name:'充電のきわみ', desc:'充電を100回完了する', check: s => s.charges >= 100 },
+      { id:'combo10', icon:'👆', prog:s=>[s.bestCombo,10], name:'コンボ10！', desc:'コンボを10つなげる', check: s => s.bestCombo >= 10 },
+      { id:'combo15', icon:'✌️', prog:s=>[s.bestCombo,15], name:'コンボ15！！', desc:'コンボを15つなげる', check: s => s.bestCombo >= 15 },
+      { id:'combo20', icon:'⚔️', prog:s=>[s.bestCombo,20], name:'神の連打', desc:'コンボを20つなげる（途切れさせずに満タン直前まで！）', check: s => s.bestCombo >= 20 },
+      { id:'fever', icon:'🎋', prog:s=>[s.fevers,1], name:'はじめてのフィーバー', desc:'ゴールデン笹フィーバーを体験する', check: s => s.fevers >= 1 },
+      { id:'streak3', icon:'📅', prog:s=>[s.streak.count,3], name:'3日連続', desc:'3日連続で充電する', check: s => s.streak.count >= 3 },
+      { id:'streak7', icon:'🗓️', prog:s=>[s.streak.count,7], name:'1週間連続', desc:'7日連続で充電する', check: s => s.streak.count >= 7 },
+      { id:'streak30', icon:'🏅', prog:s=>[s.streak.count,30], name:'1ヶ月連続', desc:'30日連続で充電する', check: s => s.streak.count >= 30 },
+      { id:'morning', icon:'🌅', name:'あさの充電', desc:'朝5〜9時に充電を完了する', check: (s, ctx) => !!(ctx && ctx.morning) },
+      { id:'night', icon:'🌙', name:'よふかし充電', desc:'深夜0〜4時に充電を完了する', check: (s, ctx) => !!(ctx && ctx.night) },
+      { id:'pet10', icon:'💚', prog:s=>[s.pets,10], name:'なでなで10回', desc:'パンダさんを10回なでる', check: s => s.pets >= 10 },
+      { id:'dex50', icon:'📖', prog:s=>[dexOwnedCount(s),Math.ceil(CARD_TOTAL/2)], name:'ずかん半分', desc:'コンプ率50%達成', check: s => dexOwnedCount(s) / CARD_TOTAL >= 0.5 },
+      { id:'dex100', icon:'👑', prog:s=>[dexOwnedCount(s),CARD_TOTAL], name:'ずかんコンプ！', desc:'すべてのカードを集める', check: s => dexOwnedCount(s) >= CARD_TOTAL }
     ];
     function dexOwnedCount(s) {
       return Object.keys(s.cards || {}).filter(k => s.cards[k] > 0).length;
@@ -1495,10 +1530,20 @@
     function soundComplete() {
       [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.22, 'triangle', 0.12, i * 0.11));
     }
+    // レアリティごとに「ごほうびの音」を変える：Nはチャイム1つ、Rは2音、SRは上がるアルペジオ、URはファンファーレ＋きらきら
     function soundCard(rarity) {
-      const layers = { N: 1, R: 2, SR: 3, UR: 4 }[rarity] || 1;
-      for (let i = 0; i < layers; i++) {
-        playTone(1400 + i * 220, 0.28, 'sine', 0.09, i * 0.05);
+      const seq = {
+        N:  [[1175, 0]],
+        R:  [[988, 0], [1319, 0.09]],
+        SR: [[784, 0], [988, 0.08], [1175, 0.16], [1568, 0.24]],
+        UR: [[659, 0], [784, 0.08], [988, 0.16], [1319, 0.24], [1568, 0.34], [1976, 0.46]]
+      }[rarity] || [[1175, 0]];
+      seq.forEach(function (n) { playTone(n[0], rarity === 'UR' ? 0.34 : 0.26, 'triangle', 0.1, n[1]); });
+      if (rarity === 'UR' || rarity === 'SR') {
+        // きらきら：高い音を小刻みに
+        for (let i = 0; i < (rarity === 'UR' ? 6 : 3); i++) {
+          playTone(2400 + Math.random() * 1600, 0.12, 'sine', 0.035, 0.5 + i * 0.07);
+        }
       }
     }
     function soundPet() {
@@ -2233,11 +2278,23 @@
     function renderAch() {
       const unlockedCount = save.ach.length;
       achProgress.textContent = '解除済み ' + unlockedCount + ' / ' + ACHIEVEMENTS.length;
-      achList.innerHTML = ACHIEVEMENTS.map(a => {
+      // 解除済みを先に、あとは進みが大きい順（もう少しで取れるものが上に来る）
+      const rows = ACHIEVEMENTS.map((a, i) => {
         const unlocked = save.ach.indexOf(a.id) !== -1;
-        return '<div class="ach-item' + (unlocked ? '' : ' locked') + '">' +
-          '<div class="ach-icon">' + (unlocked ? '🏆' : '🔒') + '</div>' +
-          '<div><div class="ach-name">' + a.name + '</div><div class="ach-desc">' + a.desc + '</div></div>' +
+        let cur = 0, max = 0;
+        if (a.prog) { try { const pr = a.prog(save); cur = Math.min(pr[0] || 0, pr[1]); max = pr[1]; } catch (e) {} }
+        return { a: a, i: i, unlocked: unlocked, cur: cur, max: max, ratio: max ? cur / max : 0 };
+      });
+      rows.sort((x, y) => (y.unlocked - x.unlocked) || (!x.unlocked && (y.ratio - x.ratio)) || (x.i - y.i));
+      achList.innerHTML = rows.map(r => {
+        const a = r.a;
+        const bar = (!r.unlocked && r.max)
+          ? '<div class="ach-bar"><i style="width:' + Math.round(r.ratio * 100) + '%"></i></div><div class="ach-prog">' + r.cur + ' / ' + r.max + '</div>'
+          : '';
+        return '<div class="ach-item' + (r.unlocked ? ' done' : ' locked') + '">' +
+          '<div class="ach-icon">' + (r.unlocked ? a.icon : '🔒') + '</div>' +
+          '<div class="ach-text"><div class="ach-name"><budoux-ja>' + a.name + '</budoux-ja></div><div class="ach-desc"><budoux-ja>' + a.desc + '</budoux-ja></div>' + bar + '</div>' +
+          (r.unlocked ? '<div class="ach-stamp">達成</div>' : '') +
           '</div>';
       }).join('');
     }
@@ -2287,12 +2344,13 @@
         if (equipped) { cls += ' equipped'; state = '着せてるよ♪'; }
         else if (unlocked) { state = 'タップで着せる'; }
         else { cls += ' locked'; state = '🔒 ' + o.hint; }
-        return '<div class="' + cls + '" data-outfit-id="' + o.id + '">' +
+        return '<div class="' + cls + '" data-outfit-id="' + o.id + '" role="button" tabindex="0" aria-pressed="' + equipped + '">' +
           '<span class="outfit-emoji">' + o.emoji + '</span>' + o.name +
           '<span class="outfit-state">' + state + '</span></div>';
       }).join('');
       outfitBody.querySelectorAll('.outfit-cell[data-outfit-id]').forEach(el => {
         el.addEventListener('click', () => onOutfitTap(el.getAttribute('data-outfit-id')));
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOutfitTap(el.getAttribute('data-outfit-id')); } });
       });
     }
     function onOutfitTap(id) {
