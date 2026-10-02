@@ -991,7 +991,31 @@
       line-height: 1.3;
       position: relative;
     }
-    .dex-card.has-art { padding: 0; overflow: hidden; align-items: flex-end; }
+    .dex-card.has-art { padding: 0; overflow: hidden; align-items: flex-end; border: 3px solid var(--rc, #4caf50); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .dex-card.N { --rc: #4caf50; }
+    .dex-card.R { --rc: #2196f3; }
+    .dex-card.SR { --rc: #b43fd0; }
+    .dex-card.UR { --rc: #f1b400; box-shadow: 0 0 10px rgba(255,200,0,0.7), 0 2px 8px rgba(0,0,0,0.15); }
+    .dex-tag {
+      position: absolute; top: 4px; left: 4px; z-index: 2;
+      font-size: 0.56rem; font-weight: 900; letter-spacing: 0.04em; color: #fff;
+      background: var(--rc, #4caf50); border-radius: 999px; padding: 1px 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .dex-count {
+      position: absolute; top: 4px; right: 4px; z-index: 2;
+      font-size: 0.58rem; font-weight: 900; color: #2a5a30; background: rgba(255,255,255,0.92);
+      border-radius: 999px; padding: 1px 6px;
+    }
+    .dex-card.UR.has-art::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.45) 48%, transparent 62%);
+      background-size: 300% 300%; animation: holoSweep 3.4s linear infinite;
+    }
+    .dex-card.locked.N, .dex-card.locked.R, .dex-card.locked.SR, .dex-card.locked.UR {
+      background: #e4e8e4; border: 2px dashed var(--rc); color: #8a948a; font-size: 1.1rem;
+    }
+    .dex-sec-count { font-weight: 800; color: #6a8a6a; margin-left: 6px; font-size: 0.78rem; }
     .dex-card.has-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%; }
     .dex-card.has-art .dex-name {
       position: relative; width: 100%; padding: 14px 4px 5px;
@@ -2283,17 +2307,19 @@
     function renderDex() {
       let html = '';
       RARITY_ORDER.forEach(rarity => {
-        html += '<div class="dex-section-title">' + rarity + '（' + RARITY_LABEL_JA[rarity] + '）</div><div class="dex-grid">';
+        const ownedInRarity = CARD_POOL[rarity].filter(c => save.cards[c.id] > 0).length;
+        html += '<div class="dex-section-title">' + rarity + '（' + RARITY_LABEL_JA[rarity] + '）<span class="dex-sec-count">' + ownedInRarity + ' / ' + CARD_POOL[rarity].length + '</span></div><div class="dex-grid">';
         CARD_POOL[rarity].forEach(c => {
           const owned = save.cards[c.id] > 0;
           if (owned) {
             if (CARD_IMAGES[c.id]) {
-              html += '<div class="dex-card has-art ' + rarity + '" data-card-id="' + c.id + '" role="button" tabindex="0" aria-label="' + c.name + '"><img src="' + CARD_IMAGES[c.id] + '" alt="" loading="lazy" decoding="async"><span class="dex-name">' + c.name + '</span></div>';
+              const n = save.cards[c.id];
+              html += '<div class="dex-card has-art ' + rarity + '" data-card-id="' + c.id + '" role="button" tabindex="0" aria-label="' + RARITY_LABEL_JA[rarity] + ' ' + c.name + '"><img src="' + CARD_IMAGES[c.id] + '" alt="" loading="lazy" decoding="async"><span class="dex-tag">' + rarity + '</span>' + (n > 1 ? '<span class="dex-count">×' + n + '</span>' : '') + '<span class="dex-name"><budoux-ja>' + c.name + '</budoux-ja></span></div>';
             } else {
               html += '<div class="dex-card ' + rarity + '" data-card-id="' + c.id + '" role="button" tabindex="0">' + c.name + '</div>';
             }
           } else {
-            html += '<div class="dex-card locked">？</div>';
+            html += '<div class="dex-card locked ' + rarity + '" aria-label="未入手の' + RARITY_LABEL_JA[rarity] + 'カード">？</div>';
           }
         });
         html += '</div>';
