@@ -41,6 +41,12 @@
       --aurora-c: rgba(144,238,144,0.10);
     }
 
+    /* 日本語の改行：文節の途中で割らない（BudouX＋keep-all＋nowrap の3点セット） */
+    body { word-break: keep-all; overflow-wrap: anywhere; text-wrap: pretty; }
+    h1, h2, h3 { text-wrap: balance; }
+    .nb { white-space: nowrap; }
+    :where(budoux-ja[id]) { display: block; }
+
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background-color: var(--paper);
@@ -219,10 +225,11 @@
     /* 着せ替え絵文字オーバーレイ（パンダさんの頭のうえ） */
     .panda-outfit {
       position: absolute;
-      top: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 2.6rem;
+      top: -2px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 2.3rem;
       line-height: 1;
       pointer-events: none;
       z-index: 3;
@@ -524,16 +531,16 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 14px;
-      min-height: 176px;
+      min-height: 356px;
       perspective: 900px;
     }
     .draw-card {
-      width: 190px;
-      height: 168px;
+      width: 244px;
+      height: 338px;
       position: relative;
       transform-style: preserve-3d;
       transition: transform 0.8s cubic-bezier(.3,.9,.3,1);
-      animation: drawPop 0.5s cubic-bezier(.2,1.4,.4,1) both;
+      animation: drawPop 0.5s cubic-bezier(.2,1.4,.4,1) backwards;
     }
     @keyframes drawPop {
       0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
@@ -570,6 +577,20 @@
       position: relative;
       overflow: hidden;
     }
+    .draw-front.has-art { justify-content: flex-start; padding: 10px 10px 12px; }
+    .draw-art {
+      display: none;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 3px solid rgba(255,255,255,0.85);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.28);
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.35);
+    }
+    .has-art > .draw-art { display: block; }
+    .has-art > .draw-rarity-label { position: absolute; top: 18px; left: 18px; z-index: 2; margin: 0; background: rgba(0,0,0,0.42); }
     .draw-front.rarity-N { background: linear-gradient(135deg, #4caf50, #2e7d32); }
     .draw-front.rarity-R { background: linear-gradient(135deg, #2196f3, #1565c0); }
     .draw-front.rarity-SR { background: linear-gradient(135deg, #9c27b0, #7b1fa2, #e91e63); background-size: 200% 200%; animation: feverGradient 3s linear infinite; }
@@ -927,6 +948,13 @@
       line-height: 1.3;
       position: relative;
     }
+    .dex-card.has-art { padding: 0; overflow: hidden; align-items: flex-end; }
+    .dex-card.has-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%; }
+    .dex-card.has-art .dex-name {
+      position: relative; width: 100%; padding: 14px 4px 5px;
+      background: linear-gradient(to top, rgba(0,0,0,0.62), transparent);
+      font-size: 0.6rem; word-break: keep-all; overflow-wrap: anywhere;
+    }
     .dex-card.locked {
       background: #d8d8d8;
       color: #999;
@@ -962,7 +990,7 @@
       opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
     }
     .card-zoom-overlay.show { opacity: 1; pointer-events: auto; }
-    .card-zoom-inner { width: 230px; }
+    .card-zoom-inner { width: 264px; }
     /* 拡大表示ではフリップ用の裏返し状態を解除しないとカードが見えない */
     .card-zoom-inner .draw-face {
       position: relative;
@@ -973,11 +1001,13 @@
 
     .card-zoom-img {
       display: none;
-      width: 76%;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
       border-radius: 12px;
-      border: 3px solid rgba(255,255,255,0.75);
+      border: 3px solid rgba(255,255,255,0.85);
       box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-      margin: 6px auto 8px;
+      margin: 0 auto 8px;
     }
     .card-zoom-img.show { display: block; }
 
@@ -1008,15 +1038,15 @@
 </head>
 <body>
   <div class="wrap" id="app">
-    <h1>🔋 パンダさんパワー充電器</h1>
-    <p class="subtitle" id="subtitle">ボタンを連打して、パンダさんパワーを充電しよう！🔥🐼</p>
+    <h1><budoux-ja>🔋 <span class="nb">パンダさんパワー</span>充電器</budoux-ja></h1>
+    <budoux-ja class="subtitle" id="subtitle">ボタンを連打して、パンダさんパワーを充電しよう！🔥🐼</budoux-ja>
 
     <div class="status-row">
       <span class="chip" id="levelChip">Lv.1 みならい充電士</span>
       <span class="chip" id="streakChip">🔥 きょうから！</span>
       <button class="chip chip-sound" id="soundToggle" type="button">🔊</button>
     </div>
-    <div class="daily-hint hidden" id="dailyHint">きょうの初充電でボーナスカードもらえるよ🎁</div>
+    <budoux-ja class="daily-hint hidden" id="dailyHint">きょうの初充電でボーナスカードもらえるよ🎁</budoux-ja>
 
     <div class="card" id="card">
       <div class="panda-stage">
@@ -1039,12 +1069,12 @@
       <div class="combo" id="combo"></div>
 
       <div id="totalPower" style="margin:16px auto 0;padding:12px 18px;max-width:440px;background:rgba(7,156,21,0.08);border:2px solid var(--mei);border-radius:18px;color:var(--mei);font-weight:800;line-height:1.7;text-align:center;font-size:1.02rem;word-break:keep-all;overflow-wrap:anywhere;">
-        🔋 みんなで充電したパンダさんパワー<br>
+        <budoux-ja>🔋 みんなで充電した<span class="nb">パンダさんパワー</span></budoux-ja><br>
         累計 <span id="totalPowerNum" style="font-size:1.6em;letter-spacing:0.02em;">…</span> パワー！
       </div>
 
       <div class="result" id="result">
-        <div class="done-title">🎉充電完了🔋パンダさんパワーMAX🐼🔥</div>
+        <div class="done-title"><budoux-ja>🎉充電完了🔋<span class="nb">パンダさんパワーMAX</span>🐼🔥</budoux-ja></div>
         <div class="daily-bonus-banner hidden" id="dailyBonusBanner">🎁 デイリーボーナス！レア以上のカードが出たよ</div>
 
         <div class="card-draw-zone">
@@ -1053,8 +1083,9 @@
             <div class="draw-face draw-front" id="drawFront">
               <span class="draw-new-badge hidden" id="drawNewBadge">NEW!</span>
               <span class="draw-rarity-label" id="drawRarityLabel">N</span>
-              <div class="draw-name" id="drawName">―</div>
-              <div class="draw-body" id="drawBody">―</div>
+              <img class="draw-art" id="drawArt" alt="" decoding="async">
+              <budoux-ja class="draw-name" id="drawName">―</budoux-ja>
+              <budoux-ja class="draw-body" id="drawBody">―</budoux-ja>
             </div>
           </div>
         </div>
@@ -1091,7 +1122,7 @@
       </div>
       <div class="dex-progress" id="dexProgress">コンプ率 0%（0/30）</div>
       <div id="dexBody"></div>
-      <div class="dex-since" id="dexSince"></div>
+      <budoux-ja class="dex-since" id="dexSince"></budoux-ja>
     </div>
   </div>
 
@@ -1102,7 +1133,7 @@
         <span class="modal-title">👒 きせかえ</span>
         <button class="modal-close" id="outfitCloseBtn" type="button">✕</button>
       </div>
-      <div class="modal-sub" id="outfitProgress"></div>
+      <budoux-ja class="modal-sub" id="outfitProgress"></budoux-ja>
       <div class="outfit-grid" id="outfitBody"></div>
       <div class="dex-since">充電をがんばると、あたらしいきせかえがもらえるよ🎁</div>
     </div>
@@ -1132,7 +1163,7 @@
         <span class="modal-title">🏆 じっせき</span>
         <button class="modal-close" id="achCloseBtn" type="button">✕</button>
       </div>
-      <div class="modal-sub" id="achProgress"></div>
+      <budoux-ja class="modal-sub" id="achProgress"></budoux-ja>
       <div class="ach-list" id="achList"></div>
     </div>
   </div>
@@ -1143,8 +1174,8 @@
       <div class="draw-face draw-front" id="zoomFront" style="position:relative;height:280px;border-radius:18px;">
         <span class="draw-rarity-label" id="zoomRarityLabel">N</span>
         <img class="card-zoom-img" id="zoomImg" alt="">
-        <div class="draw-name" id="zoomName">―</div>
-        <div class="draw-body" id="zoomBody">―</div>
+        <budoux-ja class="draw-name" id="zoomName">―</budoux-ja>
+        <budoux-ja class="draw-body" id="zoomBody">―</budoux-ja>
       </div>
     </div>
   </div>
@@ -1349,6 +1380,7 @@
     const drawNewBadge = document.getElementById('drawNewBadge');
     const drawRarityLabel = document.getElementById('drawRarityLabel');
     const drawName = document.getElementById('drawName');
+    const drawArt = document.getElementById('drawArt');
     const drawBody = document.getElementById('drawBody');
     const titleUpBanner = document.getElementById('titleUpBanner');
     const achBanner = document.getElementById('achBanner');
@@ -1862,6 +1894,13 @@
       drawRarityLabel.textContent = drawn.rarity;
       drawName.textContent = drawn.name;
       drawBody.textContent = drawn.body;
+      if (CARD_IMAGES[drawn.id]) {
+        drawArt.src = CARD_IMAGES[drawn.id];
+        drawArt.alt = drawn.name + 'のイラスト';
+        drawFront.classList.add('has-art');
+      } else {
+        drawArt.removeAttribute('src');
+      }
       drawNewBadge.classList.toggle('hidden', !isNew);
 
       // 裏面→表面のフリップ演出
@@ -2064,7 +2103,7 @@
       sweetsRain();
       const banner = document.createElement('div');
       banner.className = 'milestone-banner';
-      banner.innerHTML = '🎉 ' + n.toLocaleString('ja-JP') + ' パワー突破！🐼<br><span style="font-size:0.85rem;font-weight:700;">みんなのパンダさんパワー、ありがとう💚</span>';
+      banner.innerHTML = '🎉 ' + n.toLocaleString('ja-JP') + ' パワー突破！🐼<br><span style="font-size:0.85rem;font-weight:700;">みんなの<span class="nb">パンダさんパワー</span>、ありがとう💚</span>';
       document.body.appendChild(banner);
       requestAnimationFrame(() => banner.classList.add('show'));
       setTimeout(() => banner.remove(), 3200);
@@ -2135,7 +2174,11 @@
         CARD_POOL[rarity].forEach(c => {
           const owned = save.cards[c.id] > 0;
           if (owned) {
-            html += '<div class="dex-card ' + rarity + '" data-card-id="' + c.id + '">' + c.name + '</div>';
+            if (CARD_IMAGES[c.id]) {
+              html += '<div class="dex-card has-art ' + rarity + '" data-card-id="' + c.id + '" role="button" tabindex="0" aria-label="' + c.name + '"><img src="' + CARD_IMAGES[c.id] + '" alt="" loading="lazy" decoding="async"><span class="dex-name">' + c.name + '</span></div>';
+            } else {
+              html += '<div class="dex-card ' + rarity + '" data-card-id="' + c.id + '" role="button" tabindex="0">' + c.name + '</div>';
+            }
           } else {
             html += '<div class="dex-card locked">？</div>';
           }
@@ -2155,6 +2198,7 @@
 
       dexBody.querySelectorAll('.dex-card[data-card-id]').forEach(el => {
         el.addEventListener('click', () => openCardZoom(el.getAttribute('data-card-id')));
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCardZoom(el.getAttribute('data-card-id')); } });
       });
     }
     function dateOnly(d) {
@@ -2388,5 +2432,6 @@
       });
     }
   </script>
+  <script src="budoux-ja.min.js"></script>
 </body>
 </html>
