@@ -1,6 +1,6 @@
 // パンダさんパワー充電器 — オフライン対応サービスワーカー
 // v2: index.html はネットワーク優先（更新が即届く）、失敗時だけキャッシュ
-const CACHE = 'pp-charger-v8';
+const CACHE = 'pp-charger-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,8 @@ const ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
-  './budoux-ja.min.js'
+  './budoux-ja.min.js',
+  './icon-maskable-512.png'
 ];
 
 self.addEventListener('install', (e) => {
