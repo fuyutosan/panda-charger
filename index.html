@@ -694,6 +694,28 @@
       letter-spacing: 0.05em;
     }
 
+    .gacha-overlay { position:fixed; inset:0; z-index:100; overflow:hidden; display:grid; place-items:center; background:radial-gradient(ellipse at center,#392455,#080719 75%); color:#fff; --gacha:#ffc94d; }
+    .gacha-overlay[hidden] { display:none; }
+    .gacha-overlay.sr { --gacha:#ef9dff; background:radial-gradient(ellipse at center,#63256d,#100823 75%); }
+    .gacha-rays { position:absolute; width:180vmax; height:180vmax; background:repeating-conic-gradient(from 0deg,transparent 0deg 16deg,var(--gacha) 17deg 19deg,transparent 20deg 36deg); opacity:.15; animation:gachaTurn 9s linear infinite; }
+    .gacha-orb { width:90px; height:90px; border-radius:50%; background:#fff8df; box-shadow:0 0 40px 20px var(--gacha),0 0 130px 60px var(--gacha); animation:gachaGrow 1.6s ease-in both; }
+    .gacha-stars { position:absolute; inset:0; background-image:radial-gradient(circle,#fff 0 1px,transparent 2px),radial-gradient(circle,var(--gacha) 0 2px,transparent 3px); background-size:71px 97px,123px 149px; opacity:.65; animation:gachaTurn 18s linear infinite; }
+    .gacha-caption { position:absolute; bottom:calc(22% + env(safe-area-inset-bottom)); font-weight:800; letter-spacing:.16em; font-size:.95rem; }
+    .gacha-cutin { position:absolute; width:min(88vw,430px); opacity:0; transform:translateX(110vw) rotate(-5deg); text-align:center; }
+    .gacha-cutin img { display:block; width:min(66vw,290px); aspect-ratio:1; object-fit:cover; margin:0 auto -12px; border-radius:22px; border:3px solid var(--gacha); box-shadow:0 0 45px var(--gacha); }
+    .gacha-cutin strong { display:block; position:relative; padding:13px 6px; background:linear-gradient(100deg,#fff6ce,var(--gacha),#fff6ce); color:#3e1740; font-size:clamp(1.25rem,6vw,2rem); font-style:italic; letter-spacing:.04em; box-shadow:0 8px 35px #0008; }
+    .gacha-cutin span { display:block; margin-top:18px; font-size:1rem; font-weight:800; text-shadow:0 2px 8px #000; }
+    .gacha-overlay.reveal .gacha-cutin { animation:gachaCutin .45s cubic-bezier(.16,1,.3,1) forwards; }
+    .gacha-overlay.reveal .gacha-orb, .gacha-overlay.reveal .gacha-caption { opacity:0; }
+    .gacha-flash { position:absolute; inset:0; background:#fff8e5; opacity:0; pointer-events:none; }
+    .gacha-overlay.burst .gacha-flash { animation:gachaFlash .24s ease-out both; }
+    .gacha-confetti { position:absolute; bottom:-12px; width:9px; height:17px; border-radius:2px; pointer-events:none; }
+    .gacha-skip { position:absolute; right:18px; bottom:calc(24px + env(safe-area-inset-bottom)); min-height:44px; padding:10px 18px; border:1px solid #fff9; border-radius:99px; background:#160f2dbb; color:#fff; font:inherit; cursor:pointer; }
+    .gacha-skip:focus-visible { outline:3px solid var(--gacha); outline-offset:4px; }
+    @keyframes gachaTurn { to { transform:rotate(360deg); } }
+    @keyframes gachaGrow { from { transform:scale(.25); opacity:.3; } to { transform:scale(2); opacity:1; } }
+    @keyframes gachaFlash { 0% { opacity:.7; } 100% { opacity:0; } }
+    @keyframes gachaCutin { to { transform:translateX(0) rotate(-5deg); opacity:1; } }
     .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
     .btn {
       font-family: 'Noto Sans JP', sans-serif;
@@ -2062,7 +2084,35 @@
       return Object.assign({ rarity: rarity }, card);
     }
 
+    let cancelCardDraw = function () {};
+    function soundGachaRise() {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const osc = ctx.createOscillator(), gain = ctx.createGain(), t = ctx.currentTime;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(350,t);
+      osc.frequency.exponentialRampToValueAtTime(1400,t+0.9);
+      gain.gain.setValueAtTime(0,t);
+      gain.gain.linearRampToValueAtTime(0.04,t+0.1);
+      gain.gain.linearRampToValueAtTime(0,t+1);
+      osc.connect(gain).connect(ctx.destination);
+      osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+      osc.start(); osc.stop(t+1);
+    }
+    function soundGachaPop() {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const buffer = ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i] = (Math.random()*2-1)*Math.pow(1-i/data.length,3);
+      const node = ctx.createBufferSource(), gain = ctx.createGain();
+      node.buffer = buffer; gain.gain.value = 0.08;
+      node.connect(gain).connect(ctx.destination);
+      node.onended = () => { node.disconnect(); gain.disconnect(); };
+      node.start();
+    }
     function playCardDraw(drawn) {
+      cancelCardDraw();
       duckBgm(true);
       const isNew = !(save.cards[drawn.id] > 0);
       save.cards[drawn.id] = (save.cards[drawn.id] || 0) + 1;
@@ -2081,13 +2131,60 @@
       }
       drawNewBadge.classList.toggle('hidden', !isNew);
 
-      // 裏面→表面のフリップ演出
-      setTimeout(() => {
+      let overlay = null;
+      const timers = [];
+      const priorFocus = document.activeElement;
+      let finished = false;
+      const cleanup = () => {
+        timers.forEach(clearTimeout);
+        if (overlay) { overlay.remove(); overlay = null; if(priorFocus && priorFocus.isConnected) priorFocus.focus({preventScroll:true}); }
+      };
+      cancelCardDraw = () => { finished = true; cleanup(); duckBgm(false); };
+      const revealCard = () => {
+        if (finished) return;
+        finished = true;
+        cleanup();
         drawCard.classList.add('flipped');
         soundCard(drawn.rarity);
-        setTimeout(() => duckBgm(false), 1000);
+        timers.push(setTimeout(() => duckBgm(false), 1000));
         vibrate(drawn.rarity === 'UR' || drawn.rarity === 'SR' ? [20, 30, 20] : 15);
-      }, 800);
+      };
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if ((drawn.rarity === 'UR' || drawn.rarity === 'SR') && !reduced) {
+        const ur = drawn.rarity === 'UR', duration = ur ? 3000 : 1800;
+        overlay = document.createElement('div');
+        overlay.id = 'gachaOverlay';
+        overlay.className = 'gacha-overlay ' + (ur ? 'ur' : 'sr');
+        overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true');
+        overlay.setAttribute('aria-label',ur ? 'ウルトラレアカード登場！' : 'スーパーレアカード登場！');
+        overlay.innerHTML = '<div class="gacha-rays" aria-hidden="true"></div><div class="gacha-stars" aria-hidden="true"></div><div class="gacha-orb" aria-hidden="true"></div><div class="gacha-caption">とっておきのパワーが…！</div><div class="gacha-cutin"><img alt=""><strong></strong><span></span></div><div class="gacha-flash" aria-hidden="true"></div><button class="gacha-skip" type="button">タップでスキップ ›</button>';
+        const art = overlay.querySelector('img');
+        if (CARD_IMAGES[drawn.id]) art.src = CARD_IMAGES[drawn.id]; else art.hidden = true;
+        overlay.querySelector('strong').textContent = ur ? 'ULTRA RARE!!' : 'SUPER RARE!';
+        overlay.querySelector('.gacha-cutin span').textContent = drawn.name;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').focus({preventScroll:true});
+        overlay.addEventListener('click',revealCard);
+        overlay.addEventListener('keydown',e => {
+          if(e.key === 'Escape') { e.preventDefault(); revealCard(); }
+          if(e.key === 'Tab') { e.preventDefault(); overlay.querySelector('button').focus(); }
+        });
+        soundGachaRise();
+        timers.push(setTimeout(() => {
+          if(!overlay) return;
+          overlay.classList.add('burst'); soundGachaPop();
+          const colors = ur ? ['#ffd85b','#fff4cc','#ff8ab0','#88eecf'] : ['#efa2ff','#b894ff','#ffd0e9','#fff'];
+          for(let i=0;i<(ur?48:32);i++) {
+            const p = document.createElement('i'); p.className='gacha-confetti'; p.setAttribute('aria-hidden','true');
+            const left = i%2 === 0; p.style.left=left?'8%':'92%'; p.style.background=colors[i%colors.length];
+            overlay.appendChild(p);
+            const dx=(left?1:-1)*(40+Math.random()*300), dy=-(220+Math.random()*window.innerHeight*.65);
+            p.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:'translate('+dx+'px,'+dy+'px) rotate(260deg)',opacity:1,offset:.55},{transform:'translate('+(dx*1.3)+'px,50px) rotate(540deg)',opacity:0}],{duration:1600+Math.random()*600,easing:'cubic-bezier(.1,.6,.5,1)',fill:'forwards'});
+          }
+        },duration*.48));
+        timers.push(setTimeout(() => { if(overlay) overlay.classList.add('reveal'); },duration*.57));
+        timers.push(setTimeout(revealCard,duration));
+      } else timers.push(setTimeout(revealCard,reduced ? 0 : 800));
 
       return isNew;
     }
@@ -2221,6 +2318,7 @@
     }
 
     function resetCharge() {
+      cancelCardDraw();
       mode = 'idle';
       card.classList.remove('complete', 'charging', 'fever', 'shake');
       chargeBtn.classList.remove('rapid', 'hot', 'hit', 'feverBtn');
