@@ -36,6 +36,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { touch-action: manipulation; }
 
     :root {
       --mei: #079C15;
@@ -419,7 +420,8 @@
     }
     .charge-btn .bolt { font-size: 2.2rem; }
     .charge-btn:active { transform: scale(0.93); }
-    .charge-btn:disabled { opacity: 0.55; cursor: default; animation: none; }
+    /* 満タン後は disabled にしない：iPhone は無効ボタンのタップを素通りさせ、下の画面がダブルタップでズームしてしまうため。見た目と読み上げだけ「無効」にして、タップは受けて無視する */
+    .charge-btn:disabled, .charge-btn[aria-disabled="true"] { opacity: 0.55; cursor: default; animation: none; }
 
     /* 連打モード */
     .charge-btn.rapid { animation: rapidBlink 0.36s steps(1) infinite; }
@@ -2115,7 +2117,7 @@
       card.classList.remove('fever');
       feverActive = false;
       clearTimeout(feverEndTimer);
-      chargeBtn.disabled = true;
+      chargeBtn.setAttribute('aria-disabled', 'true');
       btnIcon.textContent = '⚡';
       btnLabel.textContent = '充電する';
       status.textContent = 'パワー満タンになったよ！🐼';
@@ -2189,7 +2191,7 @@
       mode = 'idle';
       card.classList.remove('complete', 'charging', 'fever', 'shake');
       chargeBtn.classList.remove('rapid', 'hot', 'hit', 'feverBtn');
-      chargeBtn.disabled = false;
+      chargeBtn.removeAttribute('aria-disabled');
       feverActive = false;
       clearTimeout(feverEndTimer);
       btnIcon.textContent = '⚡';
@@ -2662,6 +2664,17 @@
     chargeBtn.addEventListener('pointerdown', onTap);
     againBtn.addEventListener('click', resetCharge);
     pandaFace.addEventListener('pointerdown', onPetPanda);
+
+    // ダブルタップ拡大の抑止：iOS Safari は viewport 設定と touch-action だけでは止まらないことがあるため、
+    // 350ms以内に2回目のタップが来たら既定の動き（拡大）を止める。入力欄・リンクは対象外
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (e) {
+      const now = Date.now();
+      const t = e.target;
+      const inField = t && t.closest && t.closest('input, textarea, select, a');
+      if (!inField && now - lastTouchEnd < 350) e.preventDefault();
+      lastTouchEnd = now;
+    }, { passive: false });
 
     // ピンチズーム抑止（アプリ内ブラウザ・Safari対策。ダブルタップズームはviewport設定で無効化）
     ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
