@@ -2239,11 +2239,13 @@
       drawNewBadge.classList.toggle('hidden', !isNew);
 
       let overlay = null;
+      let cardObserver = null;
       const timers = [];
       const priorFocus = document.activeElement;
       let finished = false;
       const cleanup = () => {
         timers.forEach(clearTimeout);
+        if (cardObserver) { cardObserver.disconnect(); cardObserver = null; }
         if (overlay) { overlay.remove(); overlay = null; if(priorFocus && priorFocus.isConnected) priorFocus.focus({preventScroll:true}); }
       };
       cancelCardDraw = () => { finished = true; cleanup(); duckBgm(false); };
@@ -2256,6 +2258,25 @@
         timers.push(setTimeout(() => duckBgm(false), 1000));
         vibrate(drawn.rarity === 'UR' || drawn.rarity === 'SR' ? [20, 30, 20] : 15);
       };
+      const cardFullyVisible = () => {
+        const rect=drawCard.getBoundingClientRect();
+        const viewport=window.visualViewport;
+        const top=viewport ? viewport.offsetTop : 0;
+        const bottom=top+(viewport ? viewport.height : window.innerHeight);
+        return rect.height>0 && rect.top>=top && rect.bottom<=bottom && rect.left>=0 && rect.right<=window.innerWidth;
+      };
+      const waitForVisibleCard = () => {
+        if(finished) return;
+        if(overlay) { overlay.remove(); overlay=null; if(priorFocus && priorFocus.isConnected) priorFocus.focus({preventScroll:true}); }
+        if(cardFullyVisible()) { revealCard(); return; }
+        drawCard.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+        if(!cardObserver) {
+          cardObserver=new IntersectionObserver(() => { if(cardFullyVisible()) revealCard(); },{threshold:[0,0.5,1]});
+          cardObserver.observe(drawCard);
+        }
+      };
+      // 完了したら結果へ案内し、カード全体が見える位置で反転する。
+      drawCard.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if ((drawn.rarity === 'UR' || drawn.rarity === 'SR') && !reduced) {
         const ur = drawn.rarity === 'UR', duration = ur ? 3000 : 1800;
@@ -2271,9 +2292,9 @@
         overlay.querySelector('.gacha-cutin span').textContent = drawn.name;
         document.body.appendChild(overlay);
         overlay.querySelector('button').focus({preventScroll:true});
-        overlay.addEventListener('click',revealCard);
+        overlay.addEventListener('click',waitForVisibleCard);
         overlay.addEventListener('keydown',e => {
-          if(e.key === 'Escape') { e.preventDefault(); revealCard(); }
+          if(e.key === 'Escape') { e.preventDefault(); waitForVisibleCard(); }
           if(e.key === 'Tab') { e.preventDefault(); overlay.querySelector('button').focus(); }
         });
         soundGachaRise();
@@ -2290,8 +2311,8 @@
           }
         },duration*.48));
         timers.push(setTimeout(() => { if(overlay) overlay.classList.add('reveal'); },duration*.57));
-        timers.push(setTimeout(revealCard,duration));
-      } else timers.push(setTimeout(revealCard,reduced ? 0 : 800));
+        timers.push(setTimeout(waitForVisibleCard,duration));
+      } else timers.push(setTimeout(waitForVisibleCard,reduced ? 0 : 800));
 
       return isNew;
     }
