@@ -950,6 +950,8 @@
     .cloud-btn:active { transform: scale(0.98); }
     .cloud-btn-main { background: linear-gradient(135deg, var(--mei), var(--mei-light)); color: #fff; }
     .cloud-btn-sub { background: #eef4ee; color: #3a6a40; margin-top: 8px; }
+    #profileRefresh { background:#246b43; color:#fff; margin-top:8px; }
+    #profileRefresh:disabled { background:#d5dfd8; color:#617468; cursor:wait; }
     .cloud-msg {
       text-align: center;
       font-size: 0.86rem;
@@ -1220,9 +1222,9 @@
 
         <div class="actions">
           <a class="btn btn-line" id="lineShareBtn" href="#" target="_blank" rel="noopener">LINEでシェアする</a>
-          <button class="btn btn-instagram" id="instagramShareBtn" type="button" disabled>Instagramでシェアする</button>
-          <budoux-ja class="share-hint">Instagramは画像をシェア。共有先でInstagramを選んでね。</budoux-ja>
           <a class="btn btn-x" id="shareBtn" href="#" target="_blank" rel="noopener">𝕏 でシェアする</a>
+          <button class="btn btn-instagram" id="instagramShareBtn" type="button" disabled aria-describedby="instagramShareHint">Instagramでシェアする</button>
+          <budoux-ja class="share-hint" id="instagramShareHint">開いた共有画面でInstagramを選んでね。見つからないときはキャンセルして戻ると、画像を保存して投稿できるよ。</budoux-ja>
           <button class="btn btn-again" id="againBtn">🔄 もう一回充電する</button>
           <button class="btn btn-cloud" id="openCloudBtn" type="button">☁️ きろくをのこす</button>
           <a class="btn" style="background:linear-gradient(135deg,var(--mei),var(--mei-light));color:#fff;" href="https://meimei-56p.pages.dev/">🏠 メイメイのお家へ</a>
@@ -1351,7 +1353,7 @@
       <budoux-ja class="share-hint">こんなに集めたよ！あなたのコレクションを友達に見せよう。</budoux-ja>
       <label for="profileName">カードのお名前（入れなくてもOK）</label>
       <input class="cloud-input" id="profileName" maxlength="16" placeholder="メイメイの充電士" autocomplete="off">
-      <button class="cloud-btn cloud-btn-sub" id="profileRefresh" type="button">画像を作り直す</button>
+      <button class="cloud-btn cloud-btn-main" id="profileRefresh" type="button">画像を作り直す</button>
       <budoux-ja class="share-hint" id="profileMessage" role="status">画像をつくっているよ…</budoux-ja>
       <img class="share-preview" id="profilePreview" alt="集めたカードと着せ替えと実績のプロフィール画像" hidden>
       <div class="actions">
@@ -1555,7 +1557,15 @@
     function updateShareLinks(text) {
       shareText = text;
       shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
-      lineShareBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://panda-charger.pages.dev/') + '&text=' + encodeURIComponent(text.replace('👉 https://panda-charger.pages.dev/\n',''));
+      const mobileLine = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+      if (mobileLine) {
+        // スマホはログイン経由のSocial Pluginを使わず、公式の送信先選択へ直接渡す。
+        lineShareBtn.href = 'https://line.me/R/share?text=' + encodeURIComponent(text);
+        lineShareBtn.removeAttribute('target');
+      } else {
+        lineShareBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://panda-charger.pages.dev/') + '&text=' + encodeURIComponent(text.replace('👉 https://panda-charger.pages.dev/\n',''));
+        lineShareBtn.target = '_blank';
+      }
     }
     function canvasLines(ctx,text,x,y,maxWidth,lineHeight,maxLines) {
       const lines = []; let line = '';
@@ -1615,7 +1625,7 @@
     }
     instagramShareBtn.addEventListener('click',function () {
       if(instagramFile && navigator.canShare && navigator.share && navigator.canShare({files:[instagramFile]})) {
-        navigator.share({files:[instagramFile]}).catch(e => { if(e.name!=='AbortError') showInstagramFallback(); });
+        navigator.share({files:[instagramFile]}).catch(() => showInstagramFallback());
       } else showInstagramFallback();
     });
     document.getElementById('instagramCloseBtn').addEventListener('click',()=>{ closeModal(instagramOverlay); instagramShareBtn.focus({preventScroll:true}); });

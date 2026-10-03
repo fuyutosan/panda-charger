@@ -26,6 +26,7 @@
   async function generate() {
     const ticket=++generation;
     file=null; shareButton.disabled=true; refresh.disabled=true; download.hidden=true; preview.hidden=true;
+    refresh.textContent='画像を作成中…';
     message.textContent='あなたのコレクションを1枚にしているよ…';
     // 見せる項目だけのスナップショット。合言葉などは画像へ入れない。
     const snapshot={charges:save.charges, streak:save.streak.count, cards:{...save.cards}, outfit:save.outfit,
@@ -111,12 +112,14 @@
     preview.src=imageUrl; preview.hidden=false; download.href=imageUrl; download.hidden=false;
     caption='パンダさんパワーのマイ充電プロフィール🐼\nずかん '+owned.length+'/'+CARD_TOTAL+'種・きせかえ '+outfits+'/'+OUTFITS.length+'・じっせき '+achievements+'/'+ACHIEVEMENTS.length+'！\nあなたのコレクションも見せてね💚\nhttps://panda-charger.pages.dev/\n#パンダさんパワー';
     shareButton.disabled=false; refresh.disabled=false;
+    refresh.textContent='画像を作り直す';
     message.textContent='できたよ！この1枚を友達に送れるよ🐼';
   }
   function rebuild() {
     generate().catch(()=>{
       message.textContent='画像を作れなかったよ。もう一度「画像を作り直す」を押してね。';
       refresh.disabled=false;
+      refresh.textContent='画像を作り直す';
     });
   }
   function close() {
@@ -141,6 +144,7 @@
   refresh.addEventListener('click',rebuild);
   nameInput.addEventListener('input',()=>{
     generation++; file=null; shareButton.disabled=true; download.hidden=true; refresh.disabled=false;
+    refresh.textContent='画像を作り直す';
     message.textContent='名前を変えたら「画像を作り直す」を押してね。';
   });
   shareButton.addEventListener('click',()=>{
