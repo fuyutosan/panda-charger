@@ -386,6 +386,23 @@
     }
     /* タップのたびにパンダさんがぽよんと反応 */
     .panda-stage.bump { animation: stageBump 0.14s ease; }
+    .panda-stage::before { content:''; position:absolute; width:160px; height:160px; border-radius:50%; background:radial-gradient(circle,#ffec8a 0%,#c4f5bd 45%,transparent 70%); opacity:0; transition:opacity .25s; }
+    .charging .panda-stage::before { opacity:var(--charge,0); }
+    .charging[data-energy="warm"] .panda-body { animation: chargeSway .65s ease-in-out infinite; }
+    .charging[data-energy="bright"] .panda-body { animation: chargeHop .5s ease-in-out infinite; }
+    @keyframes chargeSway { 0%,100% { transform:rotate(-5deg) translateY(0); } 50% { transform:rotate(5deg) translateY(-6px); } }
+    @keyframes chargeHop { 0%,100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-15px) rotate(4deg); } }
+    .charge-trail { position:fixed; z-index:20; width:12px; height:12px; border-radius:50%; background:#fff8a4; box-shadow:0 0 12px 4px #ffd45f; pointer-events:none; }
+    .charge-celebration { position:fixed; inset:0; z-index:101; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center; color:#15552b; background:radial-gradient(circle,#fffde7 0%,#dcf8cd 65%,#b3edce 100%); }
+    .charge-celebration .celebration-panda { position:relative; height:min(34vh,240px); max-width:70vw; }
+    .celebration-panda img { height:100%; width:100%; object-fit:contain; animation:chargeJoy .7s ease both; filter:drop-shadow(0 0 25px #ffcf59); }
+    .celebration-panda .panda-outfit { top:-8px; }
+    .charge-celebration strong { position:relative; z-index:2; margin-bottom:22px; font-size:clamp(1.5rem,7vw,2.4rem); }
+    .charge-celebration p { margin:0; font-weight:800; }
+    .charge-celebration button { border:0; border-radius:24px; padding:12px 22px; color:white; background:#176b38; font:inherit; font-weight:800; cursor:pointer; }
+    .celebration-spark { position:absolute; left:50%; top:42%; font-size:1.6rem; pointer-events:none; }
+    @keyframes chargeJoy { 0% { transform:scale(.88); } 35% { transform:translateY(-22px) rotate(-8deg) scale(1.08); } 65% { transform:translateY(-8px) rotate(8deg); } 100% { transform:translateY(0) scale(1); } }
+    @media (prefers-reduced-motion:reduce) { .charging .panda-body,.celebration-panda img { animation:none !important; } }
     @keyframes stageBump { 0% { transform: scale(1); } 45% { transform: scale(1.06) rotate(var(--tilt, 0deg)); } 100% { transform: scale(1); } }
 
     /* 充電ボタン */
@@ -756,6 +773,9 @@
       margin-top: 16px;
     }
     .nav-btn {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -764,7 +784,7 @@
       border: 2px solid var(--mei);
       color: var(--mei);
       border-radius: 20px;
-      padding: 10px 20px;
+      padding: 10px 6px;
       font-size: 0.74rem;
       font-weight: 800;
       cursor: pointer;
@@ -2028,6 +2048,7 @@
       percent = Math.max(0, Math.min(100, p));
       fill.style.width = percent + '%';
       card.style.setProperty('--charge', (percent / 100).toFixed(3));
+      card.dataset.energy = percent >= 70 ? 'bright' : percent >= 35 ? 'warm' : 'starting';
       pct.textContent = Math.round(percent) + '%';
     }
 
@@ -2065,6 +2086,7 @@
       let gain = Math.min(6, 2 + Math.floor(combo / 3));
       if (feverActive) gain *= 2;
       setPercent(percent + gain);
+      sendChargeLight();
 
       // パンダさんがぽよん（左右にちょっと傾く）
       if (pandaStageEl) {
@@ -2252,11 +2274,22 @@
       node.onended = () => { node.disconnect(); gain.disconnect(); };
       node.start();
     }
-    function playCardDraw(drawn) {
+    let lastDrawnCard = null;
+    function sendChargeLight() {
+      if(window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.querySelectorAll('.charge-trail').length >= 6) return;
+      const from=chargeBtn.getBoundingClientRect(), to=pandaStageEl.getBoundingClientRect();
+      const light=document.createElement('i'); light.className='charge-trail'; light.setAttribute('aria-hidden','true');
+      light.style.left=(from.left+from.width/2-6)+'px'; light.style.top=(from.top+12)+'px'; document.body.appendChild(light);
+      const dx=to.left+to.width/2-(from.left+from.width/2), dy=to.top+to.height*.55-(from.top+12);
+      const animation=light.animate([{transform:'translate(0,0) scale(.7)',opacity:1},{transform:'translate('+dx+'px,'+dy+'px) scale(1.5)',opacity:0}],{duration:280,easing:'ease-out'});
+      animation.onfinish=()=>light.remove();
+    }
+    function playCardDraw(drawn, celebrate = false) {
       cancelCardDraw();
       duckBgm(true);
       const isNew = !(save.cards[drawn.id] > 0);
       save.cards[drawn.id] = (save.cards[drawn.id] || 0) + 1;
+      lastDrawnCard = drawn;
 
       drawCard.classList.remove('flipped');
       drawFront.className = 'draw-face draw-front rarity-' + drawn.rarity;
@@ -2309,7 +2342,9 @@
           cardObserver.observe(drawCard);
         }
       };
-      // 完了したら結果へ案内し、カード全体が見える位置で反転する。
+      const startDraw = () => {
+      if(finished) return;
+      // 満タンの喜びを見届けてから、カード全体が見える位置へ案内する。
       drawCard.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if ((drawn.rarity === 'UR' || drawn.rarity === 'SR') && !reduced) {
@@ -2347,6 +2382,26 @@
         timers.push(setTimeout(() => { if(overlay) overlay.classList.add('reveal'); },duration*.57));
         timers.push(setTimeout(waitForVisibleCard,duration));
       } else timers.push(setTimeout(waitForVisibleCard,reduced ? 0 : 800));
+      };
+      if(celebrate) {
+        overlay=document.createElement('div'); overlay.id='chargeCelebration'; overlay.className='charge-celebration';
+        overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','充電完了！パンダさんパワー満タン');
+        overlay.innerHTML='<strong>パワー満タン！⚡</strong><div class="celebration-panda"><img alt="元気いっぱいのパンダさん"><div class="panda-outfit"></div></div><p>きみのパワー、届いたよ🐼</p><button type="button">ごほうびを見る ›</button>';
+        overlay.querySelector('img').src=document.querySelector('.panda-body').src;
+        const costume=overlay.querySelector('.panda-outfit'); costume.textContent=pandaOutfit.textContent; costume.classList.toggle('show',pandaOutfit.classList.contains('show'));
+        document.body.appendChild(overlay);
+        const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(!reduced) for(let i=0;i<10;i++) {
+          const spark=document.createElement('span'); spark.className='celebration-spark'; spark.textContent=i%2?'✨':'💚'; spark.setAttribute('aria-hidden','true'); overlay.appendChild(spark);
+          const angle=i*Math.PI/5, x=Math.cos(angle)*140, y=Math.sin(angle)*130;
+          spark.animate([{transform:'translate(-50%,-50%) scale(.4)',opacity:1},{transform:'translate('+x+'px,'+y+'px) scale(1)',opacity:0}],{duration:750,easing:'ease-out',fill:'forwards'});
+        }
+        const next=()=>{ if(!overlay || overlay.id!=='chargeCelebration') return; overlay.remove(); overlay=null; startDraw(); };
+        overlay.querySelector('button').focus({preventScroll:true});
+        overlay.addEventListener('click',next);
+        overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();next();} if(e.key==='Tab'){e.preventDefault();overlay.querySelector('button').focus();}});
+        timers.push(setTimeout(next,reduced?1000:1100));
+      } else startDraw();
 
       return isNew;
     }
@@ -2403,6 +2458,7 @@
       combo = 0;
       comboEl.classList.remove('show');
       pandaBubble.classList.remove('show');
+      document.querySelectorAll('.fever-banner,.bamboo-rain,.floattext,.charge-trail').forEach(el=>el.remove());
       card.classList.remove('charging');
       card.classList.add('complete');
       chargeBtn.classList.remove('rapid', 'hot', 'hit', 'feverBtn');
@@ -2424,7 +2480,7 @@
 
       // カードドロー
       const drawn = drawOneCard(isDailyBonus);
-      playCardDraw(drawn);
+      playCardDraw(drawn, true);
 
       // デイリーボーナス表示
       dailyBonusBanner.classList.toggle('hidden', !isDailyBonus);
@@ -2446,14 +2502,17 @@
       if (newAch.length) {
         achBanner.textContent = '🏆 実績解除：' + newAch.map(a => a.name).join('、');
         achBanner.classList.remove('hidden');
-        newAch.forEach(a => queueAchToast(a));
       } else {
+        achBanner.textContent = '';
         achBanner.classList.add('hidden');
       }
 
       // 着せ替え解放判定（がんばりのごほうび）
       const newOutfits = checkOutfitUnlocks();
-      newOutfits.forEach(o => queueToast('👒きせかえ解放！' + o.emoji + o.name));
+      if(newOutfits.length) {
+        achBanner.textContent += (newAch.length ? ' ／ ' : '') + '👒 きせかえ解放：' + newOutfits.map(o=>o.emoji+o.name).join('、');
+        achBanner.classList.remove('hidden');
+      }
 
       persist();
 
@@ -2477,7 +2536,6 @@
 
       soundComplete();
       vibrate([30, 40, 30]);
-      burstSparkles();
     }
 
     function resetCharge() {
@@ -2610,6 +2668,16 @@
     const RARITY_LABEL_JA = { N: 'ノーマル', R: 'レア', SR: 'スーパーレア', UR: 'ウルトラレア' };
     function renderDex() {
       let html = '';
+      const collected = RARITY_ORDER.flatMap(rarity=>CARD_POOL[rarity].filter(c=>save.cards[c.id]>0).map(c=>({...c,rarity})));
+      if(collected.length) {
+        const featured = lastDrawnCard && save.cards[lastDrawnCard.id]>0 ? lastDrawnCard : collected[collected.length-1];
+        html += '<div class="dex-section-title">' + (lastDrawnCard ? 'さっき出会ったパンダさん' : 'きみのコレクション') + '</div><div class="dex-grid">';
+        const ordered = [featured,...collected.filter(c=>c.id!==featured.id)].slice(0,3);
+        ordered.forEach(c=>{
+          html += '<div class="dex-card has-art '+c.rarity+'" data-card-id="'+c.id+'" role="button" tabindex="0" aria-label="'+c.name+'"><img src="'+CARD_IMAGES[c.id]+'" alt="" decoding="async"><span class="dex-tag">'+c.rarity+'</span><span class="dex-name"><budoux-ja>'+c.name+'</budoux-ja></span></div>';
+        });
+        html += '</div><div class="dex-section-title">これから出会えるパンダさんも見てみよう</div>';
+      }
       RARITY_ORDER.forEach(rarity => {
         const ownedInRarity = CARD_POOL[rarity].filter(c => save.cards[c.id] > 0).length;
         html += '<div class="dex-section-title">' + rarity + '（' + RARITY_LABEL_JA[rarity] + '）<span class="dex-sec-count">' + ownedInRarity + ' / ' + CARD_POOL[rarity].length + '</span></div><div class="dex-grid">';
