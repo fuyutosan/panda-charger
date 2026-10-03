@@ -737,6 +737,10 @@
       background: #000;
       color: #fff;
     }
+    .btn-line { background:#06a944; color:#fff; }
+    .btn-instagram { background:linear-gradient(110deg,#a52cba,#d12c70,#ed7725); color:#fff; }
+    .share-hint { font-size:.76rem; line-height:1.7; color:#546b5b; text-align:center; margin:0 8px 4px; }
+    .share-preview { display:block; width:min(100%,260px); margin:12px auto; border-radius:18px; box-shadow:0 8px 28px #213d2522; }
     .btn-again {
       background: rgba(255,255,255,0.7);
       color: var(--mei);
@@ -1214,6 +1218,9 @@
         <div class="up-banner hidden" id="achBanner"></div>
 
         <div class="actions">
+          <a class="btn btn-line" id="lineShareBtn" href="#" target="_blank" rel="noopener">LINEでシェアする</a>
+          <button class="btn btn-instagram" id="instagramShareBtn" type="button" disabled>Instagramでシェアする</button>
+          <budoux-ja class="share-hint">Instagramは画像をシェア。共有先でInstagramを選んでね。</budoux-ja>
           <a class="btn btn-x" id="shareBtn" href="#" target="_blank" rel="noopener">𝕏 でシェアする</a>
           <button class="btn btn-again" id="againBtn">🔄 もう一回充電する</button>
           <button class="btn btn-cloud" id="openCloudBtn" type="button">☁️ きろくをのこす</button>
@@ -1233,6 +1240,18 @@
     <button class="foot-link" id="openTutBtn" type="button">❓ あそびかた</button> ｜ 🐼 <a href="https://meimei-56p.pages.dev/">メイメイのお家</a> ｜ <a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a> 💚
   </footer>
 
+  <div class="modal-overlay" id="instagramOverlay" role="dialog" aria-modal="true" aria-labelledby="instagramTitle">
+    <div class="modal-sheet">
+      <div class="modal-head"><span class="modal-title" id="instagramTitle">Instagramでシェア</span><button class="modal-close" id="instagramCloseBtn" type="button" aria-label="閉じる">✕</button></div>
+      <budoux-ja class="share-hint" id="instagramHint">画像を保存してInstagramの投稿やストーリーズで選んでね。</budoux-ja>
+      <img class="share-preview" id="instagramPreview" alt="充電完了と引いたカードのシェア画像">
+      <div class="actions">
+        <a class="btn btn-instagram" id="instagramDownload" download="panda-san-power.png">画像を保存する</a>
+        <button class="btn btn-again" id="instagramCopy" type="button">投稿文をコピーする</button>
+      </div>
+      <budoux-ja class="share-hint" id="instagramMessage" role="status"></budoux-ja>
+    </div>
+  </div>
   <!-- ずかんモーダル -->
   <div class="modal-overlay" id="dexOverlay">
     <div class="modal-sheet" id="dexSheet">
@@ -1501,6 +1520,94 @@
     const chargeBtn = document.getElementById('chargeBtn');
     const result = document.getElementById('result');
     const shareBtn = document.getElementById('shareBtn');
+    const lineShareBtn = document.getElementById('lineShareBtn');
+    const instagramShareBtn = document.getElementById('instagramShareBtn');
+    const instagramOverlay = document.getElementById('instagramOverlay');
+    const instagramMessage = document.getElementById('instagramMessage');
+    let instagramFile = null;
+    let instagramImageUrl = null;
+    let shareText = '';
+    let shareGeneration = 0;
+    function updateShareLinks(text) {
+      shareText = text;
+      shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+      lineShareBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://panda-charger.pages.dev/') + '&text=' + encodeURIComponent(text.replace('👉 https://panda-charger.pages.dev/\n',''));
+    }
+    function canvasLines(ctx,text,x,y,maxWidth,lineHeight,maxLines) {
+      const lines = []; let line = '';
+      for(const ch of Array.from(text)) {
+        if(ctx.measureText(line+ch).width > maxWidth && line) { lines.push(line); line=ch; } else line+=ch;
+      }
+      if(line) lines.push(line);
+      lines.slice(0,maxLines).forEach((s,i) => {
+        if(i===maxLines-1 && lines.length>maxLines) { while(ctx.measureText(s+'…').width>maxWidth) s=s.slice(0,-1); s+='…'; }
+        ctx.fillText(s,x,y+i*lineHeight);
+      });
+    }
+    async function prepareInstagramImage(drawn) {
+      const generation = ++shareGeneration;
+      instagramFile=null; instagramShareBtn.disabled=true;
+      const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1920;
+      const c=canvas.getContext('2d');
+      if(!c) { instagramShareBtn.disabled=false; return; }
+      const bg=c.createLinearGradient(0,0,1080,1920); bg.addColorStop(0,'#f4fff3'); bg.addColorStop(.6,'#d9f5d4'); bg.addColorStop(1,'#a9e5c9');
+      c.fillStyle=bg; c.fillRect(0,0,1080,1920);
+      c.fillStyle='#fff9';
+      for(let i=0;i<18;i++) { c.beginPath(); c.arc((i*233)%1080,(i*347)%1920,18+(i%4)*9,0,Math.PI*2); c.fill(); }
+      c.textAlign='center'; c.fillStyle='#216e45'; c.font='700 38px sans-serif';
+      c.fillText('パンダさんパワー充電器',540,170);
+      c.font='900 92px sans-serif'; c.fillText('充電完了！',540,295);
+      c.font='800 48px sans-serif'; c.fillText('パワー 100%',540,375);
+      const colors={N:'#33955b',R:'#328aca',SR:'#a848be',UR:'#bd8520'};
+      c.fillStyle=colors[drawn.rarity]||colors.N;
+      c.beginPath(); c.roundRect(115,465,850,850,44); c.fill();
+      try {
+        const art=new Image(); art.src=CARD_IMAGES[drawn.id]; await art.decode();
+        c.save(); c.beginPath(); c.roundRect(130,480,820,820,32); c.clip(); c.drawImage(art,130,480,820,820); c.restore();
+      } catch(e) { c.fillStyle='#fff'; c.font='700 64px sans-serif'; c.fillText('パンダさんパワー！',540,910); }
+      c.fillStyle=colors[drawn.rarity]||colors.N; c.font='900 48px sans-serif'; c.fillText(drawn.rarity+' CARD',540,1390);
+      c.fillStyle='#215938'; c.font='800 44px sans-serif'; canvasLines(c,drawn.name,540,1460,890,56,2);
+      c.font='500 33px sans-serif'; canvasLines(c,drawn.body,540,1590,880,47,4);
+      c.font='700 32px sans-serif'; c.fillText('あなたも ひと息充電しよう',540,1830);
+      c.font='500 28px sans-serif'; c.fillText('panda-charger.pages.dev',540,1880);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+      if(generation!==shareGeneration) return;
+      if(blob) {
+        if(instagramImageUrl) URL.revokeObjectURL(instagramImageUrl);
+        instagramFile=new File([blob],'panda-san-power.png',{type:'image/png'});
+        instagramImageUrl=URL.createObjectURL(blob);
+        document.getElementById('instagramPreview').src=instagramImageUrl;
+        document.getElementById('instagramDownload').href=instagramImageUrl;
+      }
+      instagramShareBtn.disabled=false;
+    }
+    function showInstagramFallback() {
+      instagramMessage.textContent='';
+      document.getElementById('instagramDownload').hidden=!instagramFile;
+      document.getElementById('instagramPreview').hidden=!instagramFile;
+      document.getElementById('instagramHint').textContent=instagramFile ? '画像を保存してInstagramの投稿やストーリーズで選んでね。投稿文もコピーできるよ。' : '画像を用意できなかったよ。画面のスクリーンショットと投稿文を使ってね。';
+      openModal(instagramOverlay,()=>{});
+      document.getElementById('instagramCloseBtn').focus({preventScroll:true});
+    }
+    instagramShareBtn.addEventListener('click',function () {
+      if(instagramFile && navigator.canShare && navigator.share && navigator.canShare({files:[instagramFile]})) {
+        navigator.share({files:[instagramFile]}).catch(e => { if(e.name!=='AbortError') showInstagramFallback(); });
+      } else showInstagramFallback();
+    });
+    document.getElementById('instagramCloseBtn').addEventListener('click',()=>{ closeModal(instagramOverlay); instagramShareBtn.focus({preventScroll:true}); });
+    instagramOverlay.addEventListener('click',e=>{if(e.target===instagramOverlay) closeModal(instagramOverlay);});
+    instagramOverlay.addEventListener('keydown',e=>{
+      if(e.key==='Escape') { closeModal(instagramOverlay); instagramShareBtn.focus({preventScroll:true}); }
+      if(e.key==='Tab') {
+        const buttons=Array.from(instagramOverlay.querySelectorAll('button,a[href]')).filter(el=>!el.hidden);
+        const index=buttons.indexOf(document.activeElement);
+        e.preventDefault(); buttons[(index+(e.shiftKey?-1:1)+buttons.length)%buttons.length].focus();
+      }
+    });
+    document.getElementById('instagramCopy').addEventListener('click',async()=>{
+      try { await navigator.clipboard.writeText(shareText); instagramMessage.textContent='投稿文をコピーしたよ！Instagramで貼り付けてね。'; }
+      catch(e) { instagramMessage.textContent=shareText; }
+    });
     const againBtn = document.getElementById('againBtn');
     const btnIcon = document.getElementById('btnIcon');
     const btnLabel = document.getElementById('btnLabel');
@@ -2305,10 +2412,11 @@
         const totalLine = total ? ('みんなで' + total.toLocaleString('ja-JP') + 'のパンダさんパワーを充電したよ🔋\n') : '';
         return `パンダさんパワー充電完了！⚡🐼\n「${shortMsg}」\n${lvLine}\n${totalLine}👉 ${playUrl}\n@meimei_pandasan #パンダさんパワー`;
       };
-      shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(buildShareText(null));
+      updateShareLinks(buildShareText(null));
+      prepareInstagramImage(drawn).catch(() => { instagramFile=null; instagramShareBtn.disabled=false; });
       // みんなの累計パワー +1（完了時に1回だけ）→ 完了後シェアテキストに累計を反映
       addTotalPower().then(total => {
-        shareBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(buildShareText(total));
+        if (mode === 'complete') updateShareLinks(buildShareText(total));
         if (isMilestone(total)) celebrateMilestone(total);
       });
 
