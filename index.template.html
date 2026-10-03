@@ -2207,6 +2207,7 @@
       setPercent(0);
       status.textContent = 'ボタンを押して連打スタート！⚡';
       applyTimeTheme();
+      window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     }
 
     function burstSparkles() {
