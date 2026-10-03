@@ -741,6 +741,7 @@
     .btn-instagram { background:linear-gradient(110deg,#a52cba,#d12c70,#ed7725); color:#fff; }
     .share-hint { font-size:.76rem; line-height:1.7; color:#546b5b; text-align:center; margin:0 8px 4px; }
     .share-preview { display:block; width:min(100%,260px); margin:12px auto; border-radius:18px; box-shadow:0 8px 28px #213d2522; }
+    [hidden] { display:none !important; }
     .btn-again {
       background: rgba(255,255,255,0.7);
       color: var(--mei);
@@ -1260,6 +1261,8 @@
         <button class="modal-close" id="dexCloseBtn" type="button">✕</button>
       </div>
       <div class="dex-progress" id="dexProgress">コンプ率 0%（0/30）</div>
+      <button class="cloud-btn cloud-btn-main profile-open" data-profile-source="dexOverlay" type="button">💌 友達に見せる</button>
+      <budoux-ja class="share-hint">ずかん・きせかえ・じっせきを1枚のプロフィールに。</budoux-ja>
       <div id="dexBody"></div>
       <budoux-ja class="dex-since" id="dexSince"></budoux-ja>
     </div>
@@ -1273,6 +1276,8 @@
         <button class="modal-close" id="outfitCloseBtn" type="button">✕</button>
       </div>
       <budoux-ja class="modal-sub" id="outfitProgress"></budoux-ja>
+      <button class="cloud-btn cloud-btn-main profile-open" data-profile-source="outfitOverlay" type="button">💌 友達に見せる</button>
+      <budoux-ja class="share-hint">今の着せ替えもプロフィールに載せて見せ合おう。</budoux-ja>
       <div class="outfit-grid" id="outfitBody"></div>
       <div class="dex-since">充電をがんばると、あたらしいきせかえがもらえるよ🎁</div>
     </div>
@@ -1303,6 +1308,8 @@
         <button class="modal-close" id="achCloseBtn" type="button">✕</button>
       </div>
       <budoux-ja class="modal-sub" id="achProgress"></budoux-ja>
+      <button class="cloud-btn cloud-btn-main profile-open" data-profile-source="achOverlay" type="button">💌 友達に見せる</button>
+      <budoux-ja class="share-hint">集めた実績もスタンプになってプロフィールに。</budoux-ja>
       <div class="ach-list" id="achList"></div>
     </div>
   </div>
@@ -1338,6 +1345,23 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <div class="modal-sheet">
+      <div class="modal-head"><span class="modal-title" id="profileTitle">💌 マイ充電プロフィール</span><button class="modal-close" id="profileClose" type="button" aria-label="閉じる">✕</button></div>
+      <budoux-ja class="share-hint">こんなに集めたよ！あなたのコレクションを友達に見せよう。</budoux-ja>
+      <label for="profileName">カードのお名前（入れなくてもOK）</label>
+      <input class="cloud-input" id="profileName" maxlength="16" placeholder="メイメイの充電士" autocomplete="off">
+      <button class="cloud-btn cloud-btn-sub" id="profileRefresh" type="button">画像を作り直す</button>
+      <budoux-ja class="share-hint" id="profileMessage" role="status">画像をつくっているよ…</budoux-ja>
+      <img class="share-preview" id="profilePreview" alt="集めたカードと着せ替えと実績のプロフィール画像" hidden>
+      <div class="actions">
+        <button class="btn btn-instagram" id="profileShare" type="button" disabled>画像を友達にシェア</button>
+        <a class="btn btn-line" id="profileDownload" download="panda-san-profile.png" hidden>画像を保存する</a>
+        <button class="btn btn-again" id="profileCopy" type="button">紹介文をコピーする</button>
+      </div>
+      <budoux-ja class="share-hint">共有先でLINEやInstagramを選んでね。出ないときは画像を保存して送れるよ。</budoux-ja>
+    </div>
+  </div>
   <!-- 実績解除トースト -->
   <div class="ach-toast" id="achToast"></div>
 
@@ -2951,6 +2975,7 @@
     // （cloud-sync.js はこの下で読み込まれるので、load後に実行してCloudSync未定義を避ける）
     window.addEventListener('load', function () { maybeSyncFromCloud(); });
   </script>
+  <script src="profile-share.js"></script>
   <script src="cloud-sync.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
