@@ -718,11 +718,11 @@
     .gacha-orb { width:90px; height:90px; border-radius:50%; background:#fff8df; box-shadow:0 0 40px 20px var(--gacha),0 0 130px 60px var(--gacha); animation:gachaGrow 1.6s ease-in both; }
     .gacha-stars { position:absolute; inset:0; background-image:radial-gradient(circle,#fff 0 1px,transparent 2px),radial-gradient(circle,var(--gacha) 0 2px,transparent 3px); background-size:71px 97px,123px 149px; opacity:.65; animation:gachaTurn 18s linear infinite; }
     .gacha-caption { position:absolute; bottom:calc(22% + env(safe-area-inset-bottom)); font-weight:800; letter-spacing:.16em; font-size:.95rem; }
-    .gacha-cutin { position:absolute; width:min(88vw,430px); opacity:0; transform:translateX(110vw) rotate(-5deg); text-align:center; }
-    .gacha-cutin img { display:block; width:min(66vw,290px); aspect-ratio:1; object-fit:cover; margin:0 auto -12px; border-radius:22px; border:3px solid var(--gacha); box-shadow:0 0 45px var(--gacha); }
+    .gacha-cutin { position:absolute; left:50%; top:calc(50% - 34px); width:min(88vw,430px); opacity:0; transform:translate(calc(-50% + 110vw),-50%) rotate(-5deg); text-align:center; }
+    .gacha-cutin img { display:block; width:min(66vw,290px,40dvh); aspect-ratio:1; object-fit:cover; margin:0 auto -12px; border-radius:22px; border:3px solid var(--gacha); box-shadow:0 0 45px var(--gacha); }
     .gacha-cutin strong { display:block; position:relative; padding:13px 6px; background:linear-gradient(100deg,#fff6ce,var(--gacha),#fff6ce); color:#3e1740; font-size:clamp(1.25rem,6vw,2rem); font-style:italic; letter-spacing:.04em; box-shadow:0 8px 35px #0008; }
     .gacha-cutin span { display:block; margin-top:18px; font-size:1rem; font-weight:800; text-shadow:0 2px 8px #000; }
-    .gacha-overlay.reveal .gacha-cutin { animation:gachaCutin .45s cubic-bezier(.16,1,.3,1) forwards; }
+    .gacha-overlay.reveal .gacha-cutin { animation:gachaCutin .32s cubic-bezier(.16,1,.3,1) forwards; }
     .gacha-overlay.reveal .gacha-orb, .gacha-overlay.reveal .gacha-caption { opacity:0; }
     .gacha-flash { position:absolute; inset:0; background:#fff8e5; opacity:0; pointer-events:none; }
     .gacha-overlay.burst .gacha-flash { animation:gachaFlash .24s ease-out both; }
@@ -732,7 +732,7 @@
     @keyframes gachaTurn { to { transform:rotate(360deg); } }
     @keyframes gachaGrow { from { transform:scale(.25); opacity:.3; } to { transform:scale(2); opacity:1; } }
     @keyframes gachaFlash { 0% { opacity:.7; } 100% { opacity:0; } }
-    @keyframes gachaCutin { to { transform:translateX(0) rotate(-5deg); opacity:1; } }
+    @keyframes gachaCutin { to { transform:translate(-50%,-50%) rotate(-5deg); opacity:1; } }
     .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
     .btn {
       font-family: 'Noto Sans JP', sans-serif;
@@ -837,6 +837,14 @@
     @media (max-width: 380px) {
       .panda-stage { height: 160px; }
       .charge-btn { width: 130px; height: 130px; font-size: 1.1rem; }
+    }
+    @media (max-width: 360px) {
+      body { padding-top:calc(20px + env(safe-area-inset-top,0px)); }
+      h1 { font-size:1.15rem; }
+      .status-row { gap:6px; }
+      .chip { padding:5px 8px; }
+      .panda-stage { height:130px; }
+      .card { padding:20px 16px; }
     }
 
     /* 節目のお祝いバナー */
@@ -2395,8 +2403,8 @@
             const dx=(left?1:-1)*(40+Math.random()*300), dy=-(220+Math.random()*window.innerHeight*.65);
             p.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:'translate('+dx+'px,'+dy+'px) rotate(260deg)',opacity:1,offset:.55},{transform:'translate('+(dx*1.3)+'px,50px) rotate(540deg)',opacity:0}],{duration:1600+Math.random()*600,easing:'cubic-bezier(.1,.6,.5,1)',fill:'forwards'});
           }
-        },duration*.48));
-        timers.push(setTimeout(() => { if(overlay) overlay.classList.add('reveal'); },duration*.57));
+        },duration*.24));
+        timers.push(setTimeout(() => { if(overlay) overlay.classList.add('reveal'); },duration*.30));
         timers.push(setTimeout(waitForVisibleCard,duration));
       } else timers.push(setTimeout(waitForVisibleCard,reduced ? 0 : 800));
       };
