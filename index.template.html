@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>パンダさんパワー充電器 🔋🐼</title>
 
   <!-- OGP -->
@@ -754,8 +754,8 @@
       background: #000;
       color: #fff;
     }
-    .btn-line { background:#06a944; color:#fff; }
-    .btn-instagram { background:linear-gradient(110deg,#a52cba,#d12c70,#ed7725); color:#fff; }
+    .btn-line { background:#087b36; color:#fff; }
+    .btn-instagram { background:linear-gradient(110deg,#8b269e,#a82259,#ad471c); color:#fff; }
     .share-hint { font-size:.76rem; line-height:1.7; color:#546b5b; text-align:center; margin:0 8px 4px; }
     .share-preview { display:block; width:min(100%,260px); margin:12px auto; border-radius:18px; box-shadow:0 8px 28px #213d2522; }
     [hidden] { display:none !important; }
@@ -792,6 +792,11 @@
     }
     .nav-btn .nav-emoji { font-size: 1.3rem; }
     .nav-btn:active { transform: scale(0.95); }
+    #totalPower { margin:16px auto 0; padding:10px 16px; width:min(100%,440px); background:rgba(255,255,255,.8); border-radius:18px; color:#327042; font-weight:700; line-height:1.7; text-align:center; font-size:.82rem; }
+    #totalPowerNum { font-size:1.45em; font-weight:900; }
+    .reward-actions { display:flex; gap:8px; margin:12px 0 18px; }
+    .reward-actions .btn { flex:1; min-width:0; padding:12px 5px; font-size:.8rem; }
+    .btn-again,.nav-btn,footer a,.foot-link { color:#176b38; }
 
     footer {
       position: relative;
@@ -955,6 +960,8 @@
       color: #2a5a30;
     }
     .cloud-input:focus { outline: none; border-color: var(--mei); }
+    :where(button,a,input,select,[tabindex]):focus-visible { outline:3px solid #174d83; outline-offset:3px; }
+    .cloud-input:focus-visible { outline:3px solid #174d83; outline-offset:3px; }
     .cloud-btn {
       width: 100%;
       box-sizing: border-box;
@@ -968,7 +975,7 @@
       cursor: pointer;
     }
     .cloud-btn:active { transform: scale(0.98); }
-    .cloud-btn-main { background: linear-gradient(135deg, var(--mei), var(--mei-light)); color: #fff; }
+    .cloud-btn-main { background: linear-gradient(135deg, #157a38, #176b38); color: #fff; }
     .cloud-btn-sub { background: #eef4ee; color: #3a6a40; margin-top: 8px; }
     #profileRefresh { background:#246b43; color:#fff; margin-top:8px; }
     #profileRefresh:disabled { background:#d5dfd8; color:#617468; cursor:wait; }
@@ -1198,16 +1205,16 @@
     <div class="card" id="card">
       <div class="panda-stage">
         <img class="panda-body" src="{{ASSET_1}}" alt="充電中のパンダさん">
-        <img class="panda-face" src="{{ASSET_2}}" alt="満タンのパンダさん" id="pandaFace">
+        <img class="panda-face" src="{{ASSET_2}}" alt="満タンのパンダさんをなでる" id="pandaFace" role="button" tabindex="0">
         <div class="panda-outfit" id="pandaOutfit"></div>
         <div class="panda-bubble" id="pandaBubble"></div>
       </div>
 
-      <div class="battery">
+      <div class="battery" role="progressbar" aria-label="パンダさんパワー" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="battery-fill" id="fill"></div>
       </div>
       <div class="battery-pct" id="pct">0%</div>
-      <div class="status-text" id="status">ボタンを押して連打スタート！⚡</div>
+      <div class="status-text" id="status" role="status">ボタンを押して連打スタート！⚡</div>
 
       <button class="charge-btn" id="chargeBtn">
         <span class="bolt" id="btnIcon">⚡</span>
@@ -1215,17 +1222,12 @@
       </button>
       <div class="combo" id="combo"></div>
 
-      <div id="totalPower" style="margin:16px auto 0;padding:12px 18px;max-width:440px;background:rgba(7,156,21,0.08);border:2px solid var(--mei);border-radius:18px;color:var(--mei);font-weight:800;line-height:1.7;text-align:center;font-size:1.02rem;word-break:keep-all;overflow-wrap:anywhere;">
-        <budoux-ja>🔋 みんなで充電した<span class="nb">パンダさんパワー</span></budoux-ja><br>
-        累計 <span id="totalPowerNum" style="font-size:1.6em;letter-spacing:0.02em;">…</span> パワー！
-      </div>
-
-      <div class="result" id="result" role="status" aria-live="polite">
+      <div class="result" id="result">
         <div class="done-title"><budoux-ja>🎉充電完了🔋<span class="nb">パンダさんパワーMAX</span>🐼🔥</budoux-ja></div>
         <div class="daily-bonus-banner hidden" id="dailyBonusBanner">🎁 デイリーボーナス！レア以上のカードが出たよ</div>
 
         <div class="card-draw-zone">
-          <div class="draw-card" id="drawCard">
+          <div class="draw-card" id="drawCard" role="group" tabindex="-1" aria-label="ごほうびのカード">
             <div class="draw-face draw-back"></div>
             <div class="draw-face draw-front" id="drawFront">
               <span class="draw-new-badge hidden" id="drawNewBadge">NEW!</span>
@@ -1239,13 +1241,16 @@
 
         <div class="up-banner hidden" id="titleUpBanner"></div>
         <div class="up-banner hidden" id="achBanner"></div>
+        <div class="reward-actions">
+          <button class="btn btn-again" id="againBtn" type="button">🔄 もう一回充電する</button>
+          <button class="btn btn-line" id="resultDexBtn" type="button">📖 ずかんで見る</button>
+        </div>
 
         <div class="actions">
           <a class="btn btn-line" id="lineShareBtn" href="#" target="_blank" rel="noopener">LINEでシェアする</a>
           <a class="btn btn-x" id="shareBtn" href="#" target="_blank" rel="noopener">𝕏 でシェアする</a>
           <button class="btn btn-instagram" id="instagramShareBtn" type="button" disabled aria-describedby="instagramShareHint">Instagramでシェアする</button>
           <budoux-ja class="share-hint" id="instagramShareHint">開いた共有画面でInstagramを選んでね。見つからないときはキャンセルして戻ると、画像を保存して投稿できるよ。</budoux-ja>
-          <button class="btn btn-again" id="againBtn">🔄 もう一回充電する</button>
           <button class="btn btn-cloud" id="openCloudBtn" type="button">☁️ きろくをのこす</button>
           <a class="btn" style="background:linear-gradient(135deg,var(--mei),var(--mei-light));color:#fff;" href="https://meimei-56p.pages.dev/">🏠 メイメイのお家へ</a>
         </div>
@@ -1259,6 +1264,10 @@
     </div>
   </div>
 
+  <div id="totalPower">
+    <budoux-ja>🔋 みんなで充電した<span class="nb">パンダさんパワー</span></budoux-ja>
+    累計 <span id="totalPowerNum">…</span> パワー！
+  </div>
   <footer>
     <button class="foot-link" id="openTutBtn" type="button">❓ あそびかた</button> ｜ 🐼 <a href="https://meimei-56p.pages.dev/">メイメイのお家</a> ｜ <a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a> 💚
   </footer>
@@ -1356,7 +1365,8 @@
   </div>
 
   <!-- カード拡大表示 -->
-  <div class="card-zoom-overlay" id="cardZoomOverlay">
+  <div class="card-zoom-overlay" id="cardZoomOverlay" role="dialog" aria-modal="true" aria-labelledby="zoomName">
+    <button class="modal-close" id="cardZoomClose" type="button" aria-label="カードを閉じる" style="position:absolute;top:20px;right:20px;">✕</button>
     <div class="card-zoom-inner">
       <div class="draw-face draw-front" id="zoomFront" style="position:relative;height:280px;border-radius:18px;">
         <span class="draw-rarity-label" id="zoomRarityLabel">N</span>
@@ -1888,6 +1898,8 @@
     ========================================================= */
     function updateSoundUI() {
       soundToggle.textContent = save.sound ? '🔊' : '🔇';
+      soundToggle.setAttribute('aria-label',save.sound ? '音を消す' : '音を出す');
+      soundToggle.setAttribute('aria-pressed',String(save.sound));
     }
     soundToggle.addEventListener('click', function () {
       save.sound = !save.sound;
@@ -2052,6 +2064,7 @@
       card.style.setProperty('--charge', (percent / 100).toFixed(3));
       card.dataset.energy = percent >= 70 ? 'bright' : percent >= 35 ? 'warm' : 'starting';
       pct.textContent = Math.round(percent) + '%';
+      document.querySelector('.battery').setAttribute('aria-valuenow',String(Math.round(percent)));
     }
 
     function enterRapid() {
@@ -2323,6 +2336,8 @@
         finished = true;
         cleanup();
         drawCard.classList.add('flipped');
+        drawCard.setAttribute('aria-label',drawn.rarity+' '+drawn.name+'。'+drawn.body);
+        drawCard.focus({preventScroll:true});
         soundCard(drawn.rarity);
         timers.push(setTimeout(() => duckBgm(false), 1000));
         vibrate(drawn.rarity === 'UR' || drawn.rarity === 'SR' ? [20, 30, 20] : 15);
@@ -2717,7 +2732,9 @@
     function dateOnly(d) {
       return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     }
+    let priorZoomFocus = null;
     function openCardZoom(id) {
+      priorZoomFocus = document.activeElement;
       const c = findCard(id);
       if (!c) return;
       zoomFront.className = 'draw-face draw-front rarity-' + c.rarity;
@@ -2737,8 +2754,11 @@
         zoomFront.style.minHeight = '';
       }
       cardZoomOverlay.classList.add('show');
+      document.getElementById('cardZoomClose').focus({preventScroll:true});
     }
-    cardZoomOverlay.addEventListener('click', () => cardZoomOverlay.classList.remove('show'));
+    function closeCardZoom() { cardZoomOverlay.classList.remove('show'); if(priorZoomFocus && priorZoomFocus.isConnected) priorZoomFocus.focus({preventScroll:true}); }
+    cardZoomOverlay.addEventListener('click', closeCardZoom);
+    cardZoomOverlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeCardZoom();} if(e.key==='Tab'){e.preventDefault();document.getElementById('cardZoomClose').focus();}});
 
     /* =========================================================
        セクション17: じっせき（実績）モーダル
@@ -2835,14 +2855,35 @@
     /* =========================================================
        セクション18: モーダル開閉共通処理
     ========================================================= */
+    const modalReturnFocus = new WeakMap();
     function openModal(overlay, renderFn) {
+      modalReturnFocus.set(overlay,document.activeElement);
       if (renderFn) renderFn();
       overlay.classList.add('show');
+      if(!overlay.hasAttribute('role')) { overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); }
+      const title=overlay.querySelector('.modal-title');
+      if(title && !overlay.hasAttribute('aria-labelledby')) { if(!title.id) title.id=overlay.id+'Title';overlay.setAttribute('aria-labelledby',title.id); }
+      const close=overlay.querySelector('.modal-close');
+      if(close) { close.setAttribute('aria-label','閉じる');close.focus({preventScroll:true}); }
     }
     function closeModal(overlay) {
       overlay.classList.remove('show');
+      const previous=modalReturnFocus.get(overlay); if(previous && previous.isConnected) previous.focus({preventScroll:true});
     }
+    document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+      if(overlay.id==='profileOverlay' || overlay.id==='instagramOverlay') return;
+      overlay.addEventListener('keydown',e=>{
+        if(cardZoomOverlay.classList.contains('show')) return;
+        if(e.key==='Escape') { e.preventDefault();closeModal(overlay); }
+        if(e.key==='Tab') {
+          const controls=Array.from(overlay.querySelectorAll('button,input,select,a[href],[tabindex="0"]')).filter(el=>!el.disabled && el.getClientRects().length);
+          if(!controls.length) return;
+          const index=controls.indexOf(document.activeElement); e.preventDefault();controls[(index+(e.shiftKey?-1:1)+controls.length)%controls.length].focus();
+        }
+      });
+    });
     openDexBtn.addEventListener('click', () => openModal(dexOverlay, renderDex));
+    document.getElementById('resultDexBtn').addEventListener('click',()=>openModal(dexOverlay,renderDex));
     openAchBtn.addEventListener('click', () => openModal(achOverlay, renderAch));
     openOutfitBtn.addEventListener('click', () => openModal(outfitOverlay, renderOutfit));
     dexCloseBtn.addEventListener('click', () => closeModal(dexOverlay));
@@ -2967,7 +3008,7 @@
       tutMsg.textContent = '';
       tutDots.innerHTML = tutSteps.map(function (_, i) { return '<i class="' + (i === tutStep ? 'on' : '') + '"></i>'; }).join('');
       if (s.form) { tutNextBtn.textContent = '💾 これで記録する'; tutSkipBtn.textContent = 'あとで決める'; }
-      else { tutNextBtn.textContent = last ? 'はじめる！' : 'つぎへ'; tutSkipBtn.textContent = 'スキップ'; }
+      else { tutNextBtn.textContent = last ? 'はじめる！' : 'つぎへ'; tutSkipBtn.textContent = 'すぐ遊ぶ'; }
     }
     function tutOpen() {
       tutSteps = tutBuildSteps();
@@ -2979,6 +3020,7 @@
     function tutClose() {
       tutOverlay.classList.remove('show');
       tutDone();
+      chargeBtn.focus({preventScroll:true});
     }
     async function tutNext() {
       const s = tutSteps[tutStep];
@@ -2995,7 +3037,13 @@
       const ok = await cloudDoRestore(tutName.value.trim(), tutSecret.value.trim(), function (t) { tutMsg.textContent = t; });
       if (ok) setTimeout(tutClose, 1600);
     });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tutOverlay.classList.contains('show')) tutClose(); });
+    tutOverlay.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){e.preventDefault();tutClose();}
+      if(e.key==='Tab'){
+        const controls=Array.from(tutOverlay.querySelectorAll('button,input')).filter(el=>!el.disabled && el.getClientRects().length);
+        const index=controls.indexOf(document.activeElement);e.preventDefault();controls[(index+(e.shiftKey?-1:1)+controls.length)%controls.length].focus();
+      }
+    });
     document.getElementById('openTutBtn').addEventListener('click', tutOpen);
 
     // 起動時：はじめての人にだけ自動で出す（既存のプレイヤーには出さない）
@@ -3027,8 +3075,10 @@
        セクション19: イベント登録・初期化
     ========================================================= */
     chargeBtn.addEventListener('pointerdown', onTap);
+    chargeBtn.addEventListener('click',e=>{if(e.detail===0) onTap(e);});
     againBtn.addEventListener('click', resetCharge);
     pandaFace.addEventListener('pointerdown', onPetPanda);
+    pandaFace.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onPetPanda(e);}});
 
     // ダブルタップ拡大の抑止：iOS Safari は viewport 設定と touch-action だけでは止まらないことがあるため、
     // 350ms以内に2回目のタップが来たら既定の動き（拡大）を止める。入力欄・リンクは対象外
@@ -3036,8 +3086,8 @@
     document.addEventListener('touchend', function (e) {
       const now = Date.now();
       const t = e.target;
-      const inField = t && t.closest && t.closest('input, textarea, select, a');
-      if (!inField && now - lastTouchEnd < 350) e.preventDefault();
+      const rapidTarget = t && t.closest && t.closest('#chargeBtn,.panda-stage');
+      if (rapidTarget && now - lastTouchEnd < 350) e.preventDefault();
       lastTouchEnd = now;
     }, { passive: false });
 
