@@ -32,9 +32,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PP充電器">
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@700;900&display=swap" media="print" onload="this.media='all'">
 
+  <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { touch-action: manipulation; }
 
@@ -402,7 +404,7 @@
     .charge-celebration button { border:0; border-radius:24px; padding:12px 22px; color:white; background:#176b38; font:inherit; font-weight:800; cursor:pointer; }
     .celebration-spark { position:absolute; left:50%; top:42%; font-size:1.6rem; pointer-events:none; }
     @keyframes chargeJoy { 0% { transform:scale(.88); } 35% { transform:translateY(-22px) rotate(-8deg) scale(1.08); } 65% { transform:translateY(-8px) rotate(8deg); } 100% { transform:translateY(0) scale(1); } }
-    @media (prefers-reduced-motion:reduce) { .charging .panda-body,.celebration-panda img { animation:none !important; } }
+    @media (prefers-reduced-motion:reduce) { .charging .panda-body,.celebration-panda img { animation:none !important; } .gacha-flash { display:none; } }
     @keyframes stageBump { 0% { transform: scale(1); } 45% { transform: scale(1.06) rotate(var(--tilt, 0deg)); } 100% { transform: scale(1); } }
 
     /* 充電ボタン */
@@ -2025,6 +2027,14 @@
     let feverCooldownUntil = 0;
     let bambooScheduleTimer = null;
     let lastComboTapTime = 0;
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const MOTION_PARTICLES = '.shock,.spark-hit,.floattext,.charge-trail,.heart-pop,.bamboo-rain,.gacha-confetti,.celebration-spark';
+    const clearMotionParticles=event=>{
+      if(!event.matches) return;
+      document.querySelectorAll(MOTION_PARTICLES).forEach(el=>{el.getAnimations().forEach(animation=>animation.cancel());el.remove();});
+    };
+    if(motionPreference.addEventListener) motionPreference.addEventListener('change',clearMotionParticles);
+    else if(motionPreference.addListener) motionPreference.addListener(clearMotionParticles);
 
     // 連打だけで遊べるよう、笹を狙う仕掛けは使わない。
     function scheduleBamboo() {} 
@@ -2059,6 +2069,7 @@
       setTimeout(() => b.remove(), 1700);
     }
     function bambooRain() {
+      if(motionPreference.matches) return;
       const count = 18;
       for (let i = 0; i < count; i++) {
         const s = document.createElement('div');
@@ -2192,6 +2203,7 @@
     }
 
     function spawnShock(x, y) {
+      if(motionPreference.matches) return;
       const s = document.createElement('div');
       s.className = 'shock';
       s.style.left = x + 'px';
@@ -2208,6 +2220,7 @@
     }
 
     function spawnSparks(x, y) {
+      if(motionPreference.matches) return;
       const emojis = ['⚡', '💥', '🔥', '✨', '🌟'];
       for (let i = 0; i < 4; i++) {
         const sp = document.createElement('div');
@@ -2231,6 +2244,7 @@
     }
 
     function floatGain(x, y, text) {
+      if(motionPreference.matches) return;
       const f = document.createElement('div');
       f.className = 'floattext';
       f.textContent = text;
@@ -2320,7 +2334,7 @@
     }
     let lastDrawnCard = null;
     function sendChargeLight() {
-      if(window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.querySelectorAll('.charge-trail').length >= 6) return;
+      if(motionPreference.matches || document.querySelectorAll('.charge-trail').length >= 6) return;
       const from=chargeBtn.getBoundingClientRect(), to=pandaStageEl.getBoundingClientRect();
       const light=document.createElement('i'); light.className='charge-trail'; light.setAttribute('aria-hidden','true');
       light.style.left=(from.left+from.width/2-6)+'px'; light.style.top=(from.top+12)+'px'; document.body.appendChild(light);
@@ -2416,6 +2430,7 @@
         timers.push(setTimeout(() => {
           if(!overlay) return;
           overlay.classList.add('burst'); soundGachaPop();
+          if(motionPreference.matches) return;
           const colors = ur ? ['#ffd85b','#fff4cc','#ff8ab0','#88eecf'] : ['#efa2ff','#b894ff','#ffd0e9','#fff'];
           for(let i=0;i<(ur?48:32);i++) {
             const p = document.createElement('i'); p.className='gacha-confetti'; p.setAttribute('aria-hidden','true');
@@ -2687,6 +2702,7 @@
       }
     }
     function spawnHearts(x, y) {
+      if(motionPreference.matches) { showBubble('なでてくれて、ありがとう💚'); return; }
       if (activeParticleCount() >= MAX_PARTICLES) return;
       const count = 5;
       for (let i = 0; i < count; i++) {
