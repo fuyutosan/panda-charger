@@ -475,17 +475,6 @@
       color: var(--mei); text-shadow: 0 2px 0 rgba(255,255,255,0.7); will-change: transform, opacity;
     }
 
-    /* ゴールデン笹（フィーバートリガー） */
-    .bamboo-fly {
-      position: fixed;
-      font-size: 48px;
-      z-index: 55;
-      pointer-events: auto;
-      cursor: pointer;
-      filter: drop-shadow(0 0 10px gold) drop-shadow(0 0 18px rgba(255,215,0,0.8));
-      will-change: transform, opacity;
-    }
-
     /* フィーバーバナー */
     .fever-banner {
       position: fixed;
@@ -1391,7 +1380,7 @@
       { id:'combo10', icon:'👆', prog:s=>[s.bestCombo,10], name:'コンボ10！', desc:'コンボを10つなげる', check: s => s.bestCombo >= 10 },
       { id:'combo15', icon:'✌️', prog:s=>[s.bestCombo,15], name:'コンボ15！！', desc:'コンボを15つなげる', check: s => s.bestCombo >= 15 },
       { id:'combo20', icon:'⚔️', prog:s=>[s.bestCombo,20], name:'神の連打', desc:'コンボを20つなげる（途切れさせずに満タン直前まで！）', check: s => s.bestCombo >= 20 },
-      { id:'fever', icon:'🎋', prog:s=>[s.fevers,1], name:'はじめてのフィーバー', desc:'ゴールデン笹フィーバーを体験する', check: s => s.fevers >= 1 },
+      { id:'fever', icon:'🔥', prog:s=>[s.fevers,1], name:'はじめてのフィーバー', desc:'フィーバーを体験する（コンボ15でなるよ）', check: s => s.fevers >= 1 },
       { id:'streak3', icon:'📅', prog:s=>[s.streak.count,3], name:'3日連続', desc:'3日連続で充電する', check: s => s.streak.count >= 3 },
       { id:'streak7', icon:'🗓️', prog:s=>[s.streak.count,7], name:'1週間連続', desc:'7日連続で充電する', check: s => s.streak.count >= 7 },
       { id:'streak30', icon:'🏅', prog:s=>[s.streak.count,30], name:'1ヶ月連続', desc:'30日連続で充電する', check: s => s.streak.count >= 30 },
@@ -1731,7 +1720,7 @@
     }
 
     /* =========================================================
-       セクション9: ゴールデン笹フィーバー
+       セクション9: コンボフィーバー
     ========================================================= */
     let feverActive = false;
     let feverEndTimer = null;
@@ -1739,40 +1728,8 @@
     let bambooScheduleTimer = null;
     let lastComboTapTime = 0;
 
-    function scheduleBamboo() {
-      clearTimeout(bambooScheduleTimer);
-      bambooScheduleTimer = setTimeout(() => {
-        if (mode === 'rapid' && !feverActive) spawnBamboo();
-        if (mode === 'rapid') scheduleBamboo();
-      }, 5000 + Math.random() * 5000);
-    }
-    function spawnBamboo() {
-      const b = document.createElement('div');
-      b.className = 'bamboo-fly';
-      b.textContent = '🎋';
-      const startY = 60 + Math.random() * (window.innerHeight * 0.5);
-      const fromLeft = Math.random() < 0.5;
-      b.style.top = startY + 'px';
-      b.style.left = (fromLeft ? '-60px' : (window.innerWidth + 60) + 'px');
-      document.body.appendChild(b);
-      const dx = fromLeft ? (window.innerWidth + 140) : -(window.innerWidth + 140);
-      const anim = b.animate([
-        { transform: 'translate(0,0) rotate(0deg)', opacity: 0 },
-        { transform: 'translate(' + (dx * 0.1) + 'px,-10px) rotate(40deg)', opacity: 1, offset: 0.1 },
-        { transform: 'translate(' + (dx * 0.9) + 'px,10px) rotate(320deg)', opacity: 1, offset: 0.9 },
-        { transform: 'translate(' + dx + 'px,0) rotate(360deg)', opacity: 0 }
-      ], { duration: 5000, easing: 'ease-in-out' });
-      let removed = false;
-      const remove = () => { if (!removed) { removed = true; b.remove(); } };
-      b.addEventListener('pointerdown', function (e) {
-        e.stopPropagation();
-        anim.cancel();
-        remove();
-        startFever();
-      });
-      anim.onfinish = remove;
-      setTimeout(remove, 5200);
-    }
+    // 連打だけで遊べるよう、笹を狙う仕掛けは使わない。
+    function scheduleBamboo() {} 
 
     function startFever() {
       const now = Date.now();
@@ -1911,7 +1868,7 @@
         card.classList.add('shake');
       }
 
-      // コンボ15到達で自動フィーバー（クールダウン10秒・手動と同時発動しない）
+      // コンボ15到達で自動フィーバー（クールダウン10秒）
       if (combo === 15 && !feverActive && Date.now() > feverCooldownUntil) {
         startFever();
       }
@@ -2582,8 +2539,8 @@
       const steps = [
         { pic: '<img src="' + bodySrc + '" alt="">', title: 'ようこそ！パンダさんパワー充電器へ',
           text: 'まんなかの大きなボタンを、れんだ！れんだ！\n100%まで充電したら、今日のカードがもらえるよ⚡' },
-        { pic: '<div class="tut-emoji" aria-hidden="true">🔥🎋</div>', title: '速くたたくと、コンボ！',
-          text: 'コンボがつながるほど、たまる量がアップ。ときどき飛んでくる金の笹🎋をタップすると、6秒間パワー2倍のフィーバーになるよ！' },
+        { pic: '<div class="tut-emoji" aria-hidden="true">🔥</div>', title: '速くたたくと、コンボ！',
+          text: 'コンボがつながるほど、たまる量がアップ。コンボ15で自動フィーバー！6秒間パワー2倍になるよ！' },
         { pic: '<img class="tut-card" src="' + (CARD_IMAGES.u01 || '') + '" alt="">', title: 'カードを集めよう',
           text: '全30種のパンダさんずかん。集めるときせかえや実績も解放されるよ。1日のはじめの充電は、レア以上が確定のボーナス🎁' }
       ];
