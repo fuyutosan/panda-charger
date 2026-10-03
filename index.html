@@ -845,6 +845,7 @@
       .chip { padding:5px 8px; }
       .panda-stage { height:130px; }
       .card { padding:20px 16px; }
+      .nav-row { margin-top:12px; }
     }
 
     /* 節目のお祝いバナー */
@@ -1381,6 +1382,7 @@
         <img class="card-zoom-img" id="zoomImg" alt="">
         <budoux-ja class="draw-name" id="zoomName">―</budoux-ja>
         <budoux-ja class="draw-body" id="zoomBody">―</budoux-ja>
+              <a id="zoomSource" href="https://animals.sandiegozoo.org/animals/giant-panda" target="_blank" rel="noopener" style="display:block;font-size:.7rem;color:inherit;text-align:center;margin-top:10px;" hidden>豆知識の出典 ↗</a>
       </div>
     </div>
   </div>
@@ -1429,24 +1431,24 @@
         { id:'n12', name:'すきを大切に', body:'きみの『すき』を、たいせつにね💚' }
       ],
       R: [
-        { id:'r01', name:'指は6本!?', body:'パンダさんの前足には竹をつかむ『偽の親指』があって、指が6本あるんだよ😲' },
-        { id:'r02', name:'1日16時間おやすみ', body:'パンダさんは1日16時間くらい寝るんだって。休むのも仕事だよ🌙' },
-        { id:'r03', name:'木の上でぽてっ', body:'大きな体なのに枝の上で熟睡。落ちそうで落ちない、パンダさんマジック🌳' },
-        { id:'r04', name:'坂ころころ', body:'パンダさんは坂を見ると転がりたくなるんだって。楽しければOK🐼' },
-        { id:'r05', name:'目もとはみんなちがう', body:'目のまわりの黒い模様は1頭ずつちがうの。指紋みたいなものだよ👀' },
-        { id:'r06', name:'鳴き声10種類以上', body:'ブリブリ、キーキー、ハンハン…10種類以上の声で、全部意味がちがうんだよ🎵' },
-        { id:'r07', name:'冬眠しないよ', body:'脂肪を蓄えられないから、冬もずーっと笹タイムなの🎋' },
-        { id:'r08', name:'赤ちゃんは900分の1', body:'生まれたては約100〜150g。お母さんパンダさんの約900分の1なの🍼' },
-        { id:'r09', name:'消化はたった2割', body:'10〜18kg食べても消化できるのは約2割。だからずっともぐもぐ🐼' },
-        { id:'r10', name:'実はおよぎ上手', body:'川でスイスイ泳げるんだよ。運動神経ばつぐん🏊' },
-        { id:'r11', name:'実はちょっと雑食', body:'果物や小さな動物を食べることもあるの。冒険心もかわいい🍑' },
-        { id:'r12', name:'食べながら居眠り', body:'ごはんが幸せすぎてうとうと…そんなにかわいいこと、ある？💤' }
+        { id:'r01', name:'指は6本!?', body:'5本の指のほかに、手首の骨が変化した『偽の親指』があるよ。竹をつかむお助け役なんだ😲' },
+        { id:'r02', name:'こまめにおやすみ', body:'ごはんの合間に2〜4時間ずつお昼寝。食べて、休んで、またもぐもぐ🌙' },
+        { id:'r03', name:'木の上でぽてっ', body:'木登りが得意なパンダさん。枝の上で、何時間もお昼寝することがあるよ🌳' },
+        { id:'r04', name:'坂ころころ', body:'丘で遊んだり、でんぐり返しをしたり。大きな体でも、意外としなやかなんだよ🐼' },
+        { id:'r05', name:'もようはみんなちがう', body:'白黒のもようは1頭ずつ少しちがうんだよ。見分ける手がかりになるね👀' },
+        { id:'r06', name:'鳴き声10種類以上', body:'ヤギのような声でごあいさつ。鳴き声は10種類以上あるんだよ🎵' },
+        { id:'r07', name:'冬眠しないよ', body:'パンダさんは冬眠しないんだよ。寒い季節も、竹を食べて元気に過ごすよ🎋' },
+        { id:'r08', name:'赤ちゃんは900分の1', body:'赤ちゃんはお母さんの約900分の1の重さ。生まれたては、とても小さいんだよ🍼' },
+        { id:'r09', name:'もぐもぐには理由が', body:'竹は消化しにくい食べもの。栄養をとるため、たくさん食べるんだよ🎋' },
+        { id:'r10', name:'水あそびも好き', body:'水に入って遊ぶ姿も見られるよ。プールで、ぱしゃぱしゃひんやり💧' },
+        { id:'r11', name:'実はちょっと雑食', body:'大好物は竹だけど、果物や小さな動物を食べることもあるんだよ🍑' },
+        { id:'r12', name:'食べたらひと休み', body:'ごはんの合間に、ころんとお昼寝。食べる時間と休む時間をくり返すんだよ💤' }
       ],
       SR: [
-        { id:'s01', name:'10月28日はパンダさんの日', body:'10（パン）28（ダさん）の語呂合わせの記念日だよ🎉' },
-        { id:'s02', name:'1869年、世界へ', body:'フランスの宣教師ダヴィドさんが西洋に初めて紹介。150年以上世界を癒してるの✨' },
-        { id:'s03', name:'中国語で『大熊猫』', body:'大きなクマ猫って意味なんだよ。クマでもネコでもある、それがパンダさん🐼' },
-        { id:'s04', name:'名前はレッサーパンダさんが先', body:'『ジャイアント』は、先に見つかったレッサーパンダさんと区別するための名前なんだよ' }
+        { id:'s01', name:'10月28日はパンダさんの日', body:'1972年10月28日に、最初のパンダさんが上野動物園へ来たことにちなんだ記念日だよ🎉' },
+        { id:'s02', name:'1869年、世界へ', body:'1869年、ダヴィドさんがヨーロッパの科学に紹介。中国では、それより前から知られていたよ✨' },
+        { id:'s03', name:'中国語で『大熊猫』', body:'『大きなクマ猫』という意味だけど、分類はクマの仲間。名前っておもしろいね🐼' },
+        { id:'s04', name:'名前はレッサーパンダさんが先', body:'先に『パンダ』と呼ばれたのはレッサーパンダさん。大きなパンダさんにも、あとから同じ名前がついたよ🐼' }
       ],
       UR: [
         { id:'u01', name:'メイメイのひみつ①', body:'メイメイの燃料は笹じゃなくて、みんなの『ありがとう』なんだ💚へへへ' },
@@ -1454,6 +1456,25 @@
       ]
     };
     const RARITY_ORDER = ['N', 'R', 'SR', 'UR'];
+    // 豆知識の一次資料。励ましの言葉・メイメイの設定には出典リンクを付けない。
+    const CARD_SOURCES = {
+      r01:'https://animals.sandiegozoo.org/animals/giant-panda',
+      r02:'https://nationalzoo.si.edu/animals/giant-panda',
+      r03:'https://animals.sandiegozoo.org/animals/giant-panda',
+      r04:'https://zooatlanta.org/panda-updates-wednesday-october-28/',
+      r05:'https://animals.sandiegozoo.org/animals/giant-panda',
+      r06:'https://animals.sandiegozoo.org/animals/giant-panda',
+      r07:'https://zooatlanta.org/panda-updates-monday-october-23-2/',
+      r08:'https://nationalzoo.si.edu/animals/giant-panda',
+      r09:'https://nationalzoo.si.edu/animals/giant-panda',
+      r10:'https://nationalzoo.si.edu/animals/news/how-care-giant-pandas',
+      r11:'https://animals.sandiegozoo.org/animals/giant-panda',
+      r12:'https://nationalzoo.si.edu/animals/giant-panda',
+      s01:'https://www.tokyo-zoo.net/topics/events/ueno/651_26481_2020-10-28.html',
+      s02:'https://isyeb.mnhn.fr/fr/actualites/le-pere-armand-david-lhomme-qui-decouvrit-le-panda-et-le-fit-entrer-dans-la-science-9787',
+      s03:'https://animals.sandiegozoo.org/animals/giant-panda',
+      s04:'https://nationalzoo.si.edu/animals/news/red-panda-bear-and-more-red-panda-facts'
+    };
     const CARD_TOTAL = RARITY_ORDER.reduce((sum, r) => sum + CARD_POOL[r].length, 0); // 30枚
 
     function findCard(id) {
@@ -2745,6 +2766,7 @@
       priorZoomFocus = document.activeElement;
       const c = findCard(id);
       if (!c) return;
+      const source=document.getElementById('zoomSource'); source.hidden=!CARD_SOURCES[id]; if(CARD_SOURCES[id]) source.href=CARD_SOURCES[id];
       zoomFront.className = 'draw-face draw-front rarity-' + c.rarity;
       zoomFront.style.position = 'relative';
       zoomRarityLabel.textContent = c.rarity;
@@ -2766,7 +2788,8 @@
     }
     function closeCardZoom() { cardZoomOverlay.classList.remove('show'); if(priorZoomFocus && priorZoomFocus.isConnected) priorZoomFocus.focus({preventScroll:true}); }
     cardZoomOverlay.addEventListener('click', closeCardZoom);
-    cardZoomOverlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeCardZoom();} if(e.key==='Tab'){e.preventDefault();document.getElementById('cardZoomClose').focus();}});
+    document.getElementById('zoomSource').addEventListener('click',e=>e.stopPropagation());
+    cardZoomOverlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeCardZoom();} if(e.key==='Tab'){e.preventDefault();const controls=Array.from(cardZoomOverlay.querySelectorAll('button,a[href]')).filter(el=>!el.hidden);const index=controls.indexOf(document.activeElement);controls[(index+(e.shiftKey?-1:1)+controls.length)%controls.length].focus();}});
 
     /* =========================================================
        セクション17: じっせき（実績）モーダル
