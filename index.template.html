@@ -1107,8 +1107,8 @@
       text-align: center;
       margin-bottom: 8px;
     }
-    .dex-rates { margin:8px 0 12px; padding:0 12px; border:1px solid rgba(7,156,21,.2); border-radius:14px; background:rgba(255,255,255,.7); color:#2a5a30; font-size:.8rem; }
-    .dex-rates summary { min-height:44px; display:list-item; padding:12px 0; cursor:pointer; font-weight:800; }
+    .dex-rates { margin:8px 0 12px; padding:0 12px; border:1px solid rgba(7,156,21,.2); border-radius:14px; background:rgba(255,255,255,.7); color:#4a6a4a; font-size:.75rem; }
+    .dex-rates summary { min-height:44px; display:list-item; padding:12px 0; cursor:pointer; font-weight:700; }
     .dex-rates table { width:100%; border-collapse:collapse; text-align:center; }
     .dex-rates th, .dex-rates td { padding:7px 4px; border-bottom:1px solid rgba(7,156,21,.12); }
     .dex-rates th { font-weight:800; }
@@ -1311,8 +1311,13 @@
         <button class="modal-close" id="dexCloseBtn" type="button">✕</button>
       </div>
       <div class="dex-progress" id="dexProgress">コンプ率 0%（0/30）</div>
+
+      <button class="cloud-btn cloud-btn-main profile-open" data-profile-source="dexOverlay" type="button">💌 友達に見せる</button>
+      <budoux-ja class="share-hint">ずかん・きせかえ・じっせきを1枚のプロフィールに。</budoux-ja>
+      <div id="dexBody"></div>
+      <budoux-ja class="dex-since" id="dexSince"></budoux-ja>
       <details class="dex-rates">
-        <summary>🎴 カードの排出率を見る</summary>
+        <summary>カードの排出率</summary>
         <table aria-label="レア度ごとのカード排出率">
           <thead><tr><th scope="col">レア度</th><th scope="col">通常</th><th scope="col">その日最初の充電</th></tr></thead>
           <tbody>
@@ -1325,10 +1330,6 @@
         <p>その日最初の充電は、Nが出た場合にRへ昇格するよ🎁 SR・URの確率は変わらないよ。</p>
         <p>同じレア度のカードは、どれも同じ確率。持っているカードがまた出ることもあるよ。連打の速さやコンボ数で排出率は変わらないよ。</p>
       </details>
-      <button class="cloud-btn cloud-btn-main profile-open" data-profile-source="dexOverlay" type="button">💌 友達に見せる</button>
-      <budoux-ja class="share-hint">ずかん・きせかえ・じっせきを1枚のプロフィールに。</budoux-ja>
-      <div id="dexBody"></div>
-      <budoux-ja class="dex-since" id="dexSince"></budoux-ja>
     </div>
   </div>
 
