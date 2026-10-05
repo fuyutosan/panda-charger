@@ -401,6 +401,7 @@
     .celebration-panda .panda-outfit { top:-8px; }
     .charge-celebration strong { position:relative; z-index:2; margin-bottom:22px; font-size:clamp(1.5rem,7vw,2.4rem); }
     .charge-celebration p { margin:0; font-weight:800; }
+    .charge-celebration .celebration-skip { position:absolute; right:18px; bottom:calc(24px + env(safe-area-inset-bottom)); min-height:44px; z-index:3; }
     .charge-celebration button { border:0; border-radius:24px; padding:12px 22px; color:white; background:#176b38; font:inherit; font-weight:800; cursor:pointer; }
     .celebration-spark { position:absolute; left:50%; top:42%; font-size:1.6rem; pointer-events:none; }
     @keyframes chargeJoy { 0% { transform:scale(.88); } 35% { transform:translateY(-22px) rotate(-8deg) scale(1.08); } 65% { transform:translateY(-8px) rotate(8deg); } 100% { transform:translateY(0) scale(1); } }
@@ -729,7 +730,7 @@
     .gacha-flash { position:absolute; inset:0; background:#fff8e5; opacity:0; pointer-events:none; }
     .gacha-overlay.burst .gacha-flash { animation:gachaFlash .24s ease-out both; }
     .gacha-confetti { position:absolute; bottom:-12px; width:9px; height:17px; border-radius:2px; pointer-events:none; }
-    .gacha-skip { position:absolute; right:18px; bottom:calc(24px + env(safe-area-inset-bottom)); min-height:44px; padding:10px 18px; border:1px solid #fff9; border-radius:99px; background:#160f2dbb; color:#fff; font:inherit; cursor:pointer; }
+    .gacha-skip { z-index:3; position:absolute; right:18px; bottom:calc(24px + env(safe-area-inset-bottom)); min-height:44px; padding:10px 18px; border:1px solid #fff9; border-radius:99px; background:#160f2dbb; color:#fff; font:inherit; cursor:pointer; }
     .gacha-skip:focus-visible { outline:3px solid var(--gacha); outline-offset:4px; }
     @keyframes gachaTurn { to { transform:rotate(360deg); } }
     @keyframes gachaGrow { from { transform:scale(.25); opacity:.3; } to { transform:scale(2); opacity:1; } }
@@ -841,6 +842,7 @@
       .charge-btn { width: 130px; height: 130px; font-size: 1.1rem; }
     }
     @media (max-width: 360px) {
+      .gacha-skip, .charge-celebration .celebration-skip { right:8px; width:calc(50vw - 88px); padding:10px 6px; font-size:.8rem; }
       body { padding-top:calc(20px + env(safe-area-inset-top,0px)); }
       h1 { font-size:1.15rem; }
       .status-row { gap:6px; }
@@ -944,7 +946,7 @@
       color: var(--mei);
       font-weight: 900;
       font-size: 1rem;
-      width: 32px; height: 32px;
+      width: 44px; height: 44px;
       border-radius: 50%;
       cursor: pointer;
     }
@@ -1124,7 +1126,7 @@
       opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
     }
     .card-zoom-overlay.show { opacity: 1; pointer-events: auto; }
-    .card-zoom-inner { width: 264px; }
+    .card-zoom-inner { width:min(264px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow-y:auto; border-radius:18px; }
     /* 拡大表示ではフリップ用の裏返し状態を解除しないとカードが見えない */
     .card-zoom-inner .draw-face {
       position: relative;
@@ -1283,7 +1285,7 @@
     <button class="foot-link" id="openTutBtn" type="button">❓ あそびかた</button> ｜ 🐼 <a href="https://meimei-56p.pages.dev/">メイメイのお家</a> ｜ <a href="https://twitter.com/meimei_pandasan" target="_blank" rel="noopener">@meimei_pandasan</a> 💚
   </footer>
 
-  <div class="modal-overlay" id="instagramOverlay" role="dialog" aria-modal="true" aria-labelledby="instagramTitle">
+  <div inert aria-hidden="true" class="modal-overlay" id="instagramOverlay" role="dialog" aria-modal="true" aria-labelledby="instagramTitle">
     <div class="modal-sheet">
       <div class="modal-head"><span class="modal-title" id="instagramTitle">Instagramでシェア</span><button class="modal-close" id="instagramCloseBtn" type="button" aria-label="閉じる">✕</button></div>
       <budoux-ja class="share-hint" id="instagramHint">画像を保存してInstagramの投稿やストーリーズで選んでね。</budoux-ja>
@@ -1296,7 +1298,7 @@
     </div>
   </div>
   <!-- ずかんモーダル -->
-  <div class="modal-overlay" id="dexOverlay">
+  <div inert aria-hidden="true" class="modal-overlay" id="dexOverlay">
     <div class="modal-sheet" id="dexSheet">
       <div class="modal-head">
         <span class="modal-title">📖 パンダさんずかん</span>
@@ -1311,7 +1313,7 @@
   </div>
 
   <!-- きせかえモーダル -->
-  <div class="modal-overlay" id="outfitOverlay">
+  <div inert aria-hidden="true" class="modal-overlay" id="outfitOverlay">
     <div class="modal-sheet" id="outfitSheet">
       <div class="modal-head">
         <span class="modal-title">👒 きせかえ</span>
@@ -1326,7 +1328,7 @@
   </div>
 
   <!-- クラウドセーブ（記録をのこす）モーダル -->
-  <div class="modal-overlay" id="cloudOverlay">
+  <div inert aria-hidden="true" class="modal-overlay" id="cloudOverlay">
     <div class="modal-sheet" id="cloudSheet">
       <div class="modal-head">
         <span class="modal-title">☁️ きろくをのこす</span>
@@ -1343,7 +1345,7 @@
   </div>
 
   <!-- じっせき（実績）モーダル -->
-  <div class="modal-overlay" id="achOverlay">
+  <div inert aria-hidden="true" class="modal-overlay" id="achOverlay">
     <div class="modal-sheet" id="achSheet">
       <div class="modal-head">
         <span class="modal-title">🏆 じっせき</span>
@@ -1357,7 +1359,7 @@
   </div>
 
   <!-- はじめてのチュートリアル（4画面。最後があいことば入力） -->
-  <div class="tut-overlay" id="tutOverlay" role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+  <div inert aria-hidden="true" class="tut-overlay" id="tutOverlay" role="dialog" aria-modal="true" aria-labelledby="tutTitle">
     <div class="tut-sheet">
       <div class="tut-pic" id="tutPic"></div>
       <div class="tut-title" id="tutTitle"></div>
@@ -1376,7 +1378,7 @@
   </div>
 
   <!-- カード拡大表示 -->
-  <div class="card-zoom-overlay" id="cardZoomOverlay" role="dialog" aria-modal="true" aria-labelledby="zoomName">
+  <div inert aria-hidden="true" class="card-zoom-overlay" id="cardZoomOverlay" role="dialog" aria-modal="true" aria-labelledby="zoomName">
     <button class="modal-close" id="cardZoomClose" type="button" aria-label="カードを閉じる" style="position:absolute;top:20px;right:20px;">✕</button>
     <div class="card-zoom-inner">
       <div class="draw-face draw-front" id="zoomFront" style="position:relative;height:280px;border-radius:18px;">
@@ -1389,7 +1391,7 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+  <div inert aria-hidden="true" class="modal-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <div class="modal-sheet">
       <div class="modal-head"><span class="modal-title" id="profileTitle">💌 マイ充電プロフィール</span><button class="modal-close" id="profileClose" type="button" aria-label="閉じる">✕</button></div>
       <budoux-ja class="share-hint">こんなに集めたよ！あなたのコレクションを友達に見せよう。</budoux-ja>
@@ -1547,7 +1549,7 @@
         ach: [],
         outfit: null,
         unlockedOutfits: {},
-        sound: true,
+        sound: false,
         since: ''
       };
     }
@@ -2122,7 +2124,8 @@
 
     function onTap(e) {
       if (e) e.preventDefault();
-      if (mode === 'complete') return;
+      if (e && e.type==='pointerdown' && e.button!==0) return;
+      if (cloudBusy || mode === 'complete') return;
       if (mode === 'idle') enterRapid();
       registerTap();
     }
@@ -2137,8 +2140,8 @@
       save.taps = (save.taps || 0) + 1;
 
       // 速く連打するほど上昇量UP（+2% 〜 最大+6%）。フィーバー中は2倍。
-      // 満タンまで約21タップ＝コンボ実績・フィーバーが現実的に狙える長さにしている
-      let gain = Math.min(6, 2 + Math.floor(combo / 3));
+      // 速い連打でも満タンまで約24タップ。コンボ20の実績にも届く。
+      let gain = Math.min(6, 2 + Math.floor(combo / 9));
       if (feverActive) gain *= 2;
       setPercent(percent + gain);
       sendChargeLight();
@@ -2365,12 +2368,19 @@
 
       let overlay = null;
       let cardObserver = null;
+      let visibilityListener = null;
       const timers = [];
       const priorFocus = document.activeElement;
       let finished = false;
       const cleanup = () => {
         timers.forEach(clearTimeout);
         if (cardObserver) { cardObserver.disconnect(); cardObserver = null; }
+        if (visibilityListener) {
+          window.removeEventListener('scroll',visibilityListener);
+          window.removeEventListener('resize',visibilityListener);
+          if(window.visualViewport) { window.visualViewport.removeEventListener('resize',visibilityListener); window.visualViewport.removeEventListener('scroll',visibilityListener); }
+          visibilityListener = null;
+        }
         if (overlay) { overlay.remove(); overlay = null; if(priorFocus && priorFocus.isConnected) priorFocus.focus({preventScroll:true}); }
       };
       cancelCardDraw = () => { finished = true; cleanup(); duckBgm(false); };
@@ -2390,7 +2400,10 @@
         const viewport=window.visualViewport;
         const top=viewport ? viewport.offsetTop : 0;
         const bottom=top+(viewport ? viewport.height : window.innerHeight);
-        return rect.height>0 && rect.top>=top && rect.bottom<=bottom && rect.left>=0 && rect.right<=window.innerWidth;
+        const visibleHeight=Math.min(rect.bottom,bottom)-Math.max(rect.top,top);
+        const visibleWidth=Math.min(rect.right,window.innerWidth)-Math.max(rect.left,0);
+        // 横向き・拡大表示でカードが画面より大きくても、裏面のまま待ち続けない。
+        return rect.height>0 && visibleHeight>=Math.min(rect.height,bottom-top)-2 && visibleWidth>=Math.min(rect.width,window.innerWidth)-2;
       };
       const waitForVisibleCard = () => {
         if(finished) return;
@@ -2398,8 +2411,12 @@
         if(cardFullyVisible()) { revealCard(); return; }
         drawCard.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
         if(!cardObserver) {
-          cardObserver=new IntersectionObserver(() => { if(cardFullyVisible()) revealCard(); },{threshold:[0,0.5,1]});
+          visibilityListener=()=>{ if(cardFullyVisible()) revealCard(); };
+          cardObserver=new IntersectionObserver(visibilityListener,{threshold:[0,0.5,0.95,1]});
           cardObserver.observe(drawCard);
+          window.addEventListener('scroll',visibilityListener,{passive:true});
+          window.addEventListener('resize',visibilityListener);
+          if(window.visualViewport) { window.visualViewport.addEventListener('resize',visibilityListener); window.visualViewport.addEventListener('scroll',visibilityListener); }
         }
       };
       const startDraw = () => {
@@ -2414,16 +2431,17 @@
         overlay.className = 'gacha-overlay ' + (ur ? 'ur' : 'sr');
         overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true');
         overlay.setAttribute('aria-label',ur ? 'ウルトラレアカード登場！' : 'スーパーレアカード登場！');
-        overlay.innerHTML = '<div class="gacha-rays" aria-hidden="true"></div><div class="gacha-stars" aria-hidden="true"></div><div class="gacha-orb" aria-hidden="true"></div><div class="gacha-caption">とっておきのパワーが…！</div><div class="gacha-cutin"><img alt=""><strong></strong><span></span></div><div class="gacha-flash" aria-hidden="true"></div><button class="gacha-skip" type="button">タップでスキップ ›</button>';
+        overlay.innerHTML = '<div class="gacha-rays" aria-hidden="true"></div><div class="gacha-stars" aria-hidden="true"></div><div class="gacha-orb" aria-hidden="true"></div><div class="gacha-caption">とっておきのパワーが…！</div><div class="gacha-cutin"><img alt=""><strong></strong><span></span></div><div class="gacha-flash" aria-hidden="true"></div><button class="gacha-skip" type="button">スキップ ›</button>';
         const art = overlay.querySelector('img');
         if (CARD_IMAGES[drawn.id]) art.src = CARD_IMAGES[drawn.id]; else art.hidden = true;
         overlay.querySelector('strong').textContent = ur ? 'ULTRA RARE!!' : 'SUPER RARE!';
         overlay.querySelector('.gacha-cutin span').textContent = drawn.name;
         document.body.appendChild(overlay);
-        overlay.querySelector('button').focus({preventScroll:true});
-        overlay.addEventListener('click',waitForVisibleCard);
+        // 連打中のEnter/Spaceをスキップボタンへ引き継がない。Tabで選んだ時だけ押せる。
+        overlay.tabIndex=-1; overlay.focus({preventScroll:true});
+        overlay.querySelector('button').addEventListener('click',e=>{ e.stopPropagation(); waitForVisibleCard(); });
         overlay.addEventListener('keydown',e => {
-          if(e.key === 'Escape') { e.preventDefault(); waitForVisibleCard(); }
+          if(e.key === 'Escape') e.preventDefault();
           if(e.key === 'Tab') { e.preventDefault(); overlay.querySelector('button').focus(); }
         });
         soundGachaRise();
@@ -2447,7 +2465,7 @@
       if(celebrate) {
         overlay=document.createElement('div'); overlay.id='chargeCelebration'; overlay.className='charge-celebration';
         overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','充電完了！パンダさんパワー満タン');
-        overlay.innerHTML='<strong>パワー満タン！⚡</strong><div class="celebration-panda"><img alt="元気いっぱいのパンダさん"><div class="panda-outfit"></div></div><p>きみのパワー、届いたよ🐼</p><button type="button">ごほうびを見る ›</button>';
+        overlay.innerHTML='<strong>パワー満タン！⚡</strong><div class="celebration-panda"><img alt="元気いっぱいのパンダさん"><div class="panda-outfit"></div></div><p>きみのパワー、届いたよ🐼</p><button class="celebration-skip" type="button">スキップ ›</button>';
         overlay.querySelector('img').src=document.querySelector('.panda-body').src;
         const costume=overlay.querySelector('.panda-outfit'); costume.textContent=pandaOutfit.textContent; costume.classList.toggle('show',pandaOutfit.classList.contains('show'));
         document.body.appendChild(overlay);
@@ -2458,9 +2476,9 @@
           spark.animate([{transform:'translate(-50%,-50%) scale(.4)',opacity:1},{transform:'translate('+x+'px,'+y+'px) scale(1)',opacity:0}],{duration:750,easing:'ease-out',fill:'forwards'});
         }
         const next=()=>{ if(!overlay || overlay.id!=='chargeCelebration') return; overlay.remove(); overlay=null; startDraw(); };
-        overlay.querySelector('button').focus({preventScroll:true});
-        overlay.addEventListener('click',next);
-        overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();next();} if(e.key==='Tab'){e.preventDefault();overlay.querySelector('button').focus();}});
+        overlay.tabIndex=-1; overlay.focus({preventScroll:true});
+        overlay.querySelector('button').addEventListener('click',e=>{ e.stopPropagation(); next(); });
+        overlay.addEventListener('keydown',e=>{if(e.key==='Escape') e.preventDefault(); if(e.key==='Tab'){e.preventDefault();overlay.querySelector('button').focus();}});
         timers.push(setTimeout(next,reduced?1000:1100));
       } else startDraw();
 
@@ -2581,6 +2599,7 @@
       const shortMsg = drawn.body;
 
       // シェアリンク組み立て
+      const completedCharge=save.charges;
       const playUrl = 'https://panda-charger.pages.dev/';
       const buildShareText = (total) => {
         const lvLine = 'Lv.' + save.charges + ' ' + newTitle + '／🔥連続' + save.streak.count + '日';
@@ -2591,7 +2610,7 @@
       prepareInstagramImage(drawn).catch(() => { instagramFile=null; instagramShareBtn.disabled=false; });
       // みんなの累計パワー +1（完了時に1回だけ）→ 完了後シェアテキストに累計を反映
       addTotalPower().then(total => {
-        if (mode === 'complete') updateShareLinks(buildShareText(total));
+        if (mode === 'complete' && save.charges===completedCharge) updateShareLinks(buildShareText(total));
         if (isMilestone(total)) celebrateMilestone(total);
       });
 
@@ -2620,6 +2639,7 @@
       setPercent(0);
       status.textContent = 'ボタンを押して連打スタート！⚡';
       applyTimeTheme();
+      chargeBtn.focus({preventScroll:true});
       window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     }
 
@@ -2674,6 +2694,7 @@
     ========================================================= */
     let petBubbleTimer = null;
     function onPetPanda(e) {
+      if(cloudBusy) return;
       if (mode !== 'complete') return;
       if (e) e.preventDefault();
       pandaFace.classList.remove('petted');
@@ -2799,11 +2820,11 @@
         zoomFront.style.height = '280px';
         zoomFront.style.minHeight = '';
       }
-      cardZoomOverlay.classList.add('show');
+      cardZoomOverlay.inert=false; cardZoomOverlay.setAttribute('aria-hidden','false'); cardZoomOverlay.classList.add('show');
       document.getElementById('cardZoomClose').focus({preventScroll:true});
     }
-    function closeCardZoom() { cardZoomOverlay.classList.remove('show'); if(priorZoomFocus && priorZoomFocus.isConnected) priorZoomFocus.focus({preventScroll:true}); }
-    cardZoomOverlay.addEventListener('click', closeCardZoom);
+    function closeCardZoom() { cardZoomOverlay.classList.remove('show'); cardZoomOverlay.inert=true; cardZoomOverlay.setAttribute('aria-hidden','true'); if(priorZoomFocus && priorZoomFocus.isConnected) priorZoomFocus.focus({preventScroll:true}); }
+    cardZoomOverlay.addEventListener('click', e=>{ if(e.target===cardZoomOverlay || e.target.closest('#cardZoomClose')) closeCardZoom(); });
     document.getElementById('zoomSource').addEventListener('click',e=>e.stopPropagation());
     cardZoomOverlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeCardZoom();} if(e.key==='Tab'){e.preventDefault();const controls=Array.from(cardZoomOverlay.querySelectorAll('button,a[href]')).filter(el=>!el.hidden);const index=controls.indexOf(document.activeElement);controls[(index+(e.shiftKey?-1:1)+controls.length)%controls.length].focus();}});
 
@@ -2902,11 +2923,18 @@
     /* =========================================================
        セクション18: モーダル開閉共通処理
     ========================================================= */
+    // 本文を触った後もEscape/Tabがダイアログ内で使えるようにする。
+    document.querySelectorAll('.modal-overlay,.tut-overlay,.card-zoom-overlay').forEach(overlay=>{
+      overlay.tabIndex=-1;
+      overlay.addEventListener('pointerdown',e=>{
+        if(!e.target.closest('button,input,select,a[href],[tabindex="0"]')) overlay.focus({preventScroll:true});
+      });
+    });
     const modalReturnFocus = new WeakMap();
     function openModal(overlay, renderFn) {
       modalReturnFocus.set(overlay,document.activeElement);
       if (renderFn) renderFn();
-      overlay.classList.add('show');
+      overlay.inert=false; overlay.setAttribute('aria-hidden','false'); overlay.classList.add('show');
       if(!overlay.hasAttribute('role')) { overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); }
       const title=overlay.querySelector('.modal-title');
       if(title && !overlay.hasAttribute('aria-labelledby')) { if(!title.id) title.id=overlay.id+'Title';overlay.setAttribute('aria-labelledby',title.id); }
@@ -2914,7 +2942,7 @@
       if(close) { close.setAttribute('aria-label','閉じる');close.focus({preventScroll:true}); }
     }
     function closeModal(overlay) {
-      overlay.classList.remove('show');
+      overlay.classList.remove('show'); overlay.inert=true; overlay.setAttribute('aria-hidden','true');
       const previous=modalReturnFocus.get(overlay); if(previous && previous.isConnected) previous.focus({preventScroll:true});
     }
     document.querySelectorAll('.modal-overlay').forEach(overlay=>{
@@ -2969,8 +2997,10 @@
       tell('保存してるよ…☁️');
       try {
         const hash = await CloudSync.hashSecret(nm, sc);
+        const previous=CloudSync.getCred();
         CloudSync.saveCred(nm, hash);
-        await CloudSync.pushNow(save);
+        try { await CloudSync.pushNow(save); }
+        catch(e) { if(previous) CloudSync.saveCred(previous.nickname,previous.secretHash); else CloudSync.clearCred(); throw e; }
       } catch (e) { tell('うまく保存できなかったよ。通信をたしかめて、もう一度ためしてね'); return false; }
       tell('保存できたよ！これで別のスマホでも「' + nm + '」＋あいことばで続きからあそべるよ🐼✨');
       return true;
@@ -2982,13 +3012,19 @@
       tell('さがしてるよ…🐼');
       let remote = null, hash = '';
       try {
+        await CloudSync.pause();
         hash = await CloudSync.hashSecret(nm, sc);
         remote = await CloudSync.pull(nm, hash);
-      } catch (e) { remote = null; }
-      if (!remote) { tell('そのなまえとあいことばの記録は見つからなかったよ。入力をたしかめてね'); return false; }
-      localStorage.setItem(SAVE_KEY, JSON.stringify(remote));
+      } catch (e) { CloudSync.resume(save); tell('通信できなかったよ。接続をたしかめて、もう一度ためしてね'); return false; }
+      if (!remote) { CloudSync.resume(save); tell('そのなまえとあいことばの記録は見つからなかったよ。入力をたしかめてね'); return false; }
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(remote)); }
+      catch(e) { CloudSync.resume(save); tell('このブラウザに記録を保存できなかったよ。保存設定をたしかめてね'); return false; }
       loadSave();
+      resetCharge();
+      updateSoundUI();
+      if(!save.sound) { stopBgm(); if(audioCtx) audioCtx.suspend().catch(()=>{}); }
       CloudSync.saveCred(nm, hash);
+      CloudSync.adopt(save);
       // 画面を復元後の状態に反映
       updateStatusChips();
       updateDailyHint();
@@ -2996,8 +3032,18 @@
       tell('おかえり！記録が見つかったよ🐼 続きからあそべるよ');
       return true;
     }
-    function cloudSaveNow() { return cloudDoSave(cloudNameInput.value.trim(), cloudSecretInput.value.trim(), cloudTell); }
-    function cloudRestore() { return cloudDoRestore(cloudNameInput.value.trim(), cloudSecretInput.value.trim(), cloudTell); }
+    let cloudBusy=false;
+    async function withCloudAction(action) {
+      if(cloudBusy) return false;
+      cloudBusy=true;
+      const controls=[cloudSaveBtn,cloudRestoreBtn,tutNextBtn,tutRestoreBtn,cloudNameInput,cloudSecretInput,tutName,tutSecret,againBtn,chargeBtn];
+      controls.forEach(el=>el.disabled=true);
+      try { return await action(); }
+      catch(e) { CloudSync.resume(save); cloudTell('処理できなかったよ。通信と保存設定をたしかめてね'); tutMsg.textContent='処理できなかったよ。通信と保存設定をたしかめてね'; return false; }
+      finally { cloudBusy=false; controls.forEach(el=>el.disabled=false); }
+    }
+    function cloudSaveNow() { return withCloudAction(()=>cloudDoSave(cloudNameInput.value.trim(), cloudSecretInput.value.trim(), cloudTell)); }
+    function cloudRestore() { return withCloudAction(()=>cloudDoRestore(cloudNameInput.value.trim(), cloudSecretInput.value.trim(), cloudTell)); }
     openCloudBtn.addEventListener('click', () => openModal(cloudOverlay, renderCloud));
     cloudCloseBtn.addEventListener('click', () => closeModal(cloudOverlay));
     cloudOverlay.addEventListener('click', (e) => { if (e.target === cloudOverlay) closeModal(cloudOverlay); });
@@ -3061,18 +3107,18 @@
       tutSteps = tutBuildSteps();
       tutStep = 0;
       tutRender();
-      tutOverlay.classList.add('show');
+      tutOverlay.inert=false; tutOverlay.setAttribute('aria-hidden','false'); tutOverlay.classList.add('show');
       tutNextBtn.focus();
     }
     function tutClose() {
-      tutOverlay.classList.remove('show');
+      tutOverlay.classList.remove('show'); tutOverlay.inert=true; tutOverlay.setAttribute('aria-hidden','true');
       tutDone();
       chargeBtn.focus({preventScroll:true});
     }
     async function tutNext() {
       const s = tutSteps[tutStep];
       if (s.form) {
-        const ok = await cloudDoSave(tutName.value.trim(), tutSecret.value.trim(), function (t) { tutMsg.textContent = t; });
+        const ok = await withCloudAction(()=>cloudDoSave(tutName.value.trim(), tutSecret.value.trim(), function (t) { tutMsg.textContent = t; }));
         if (ok) setTimeout(tutClose, 1600);
         return;
       }
@@ -3081,7 +3127,7 @@
     tutNextBtn.addEventListener('click', tutNext);
     tutSkipBtn.addEventListener('click', tutClose);
     tutRestoreBtn.addEventListener('click', async function () {
-      const ok = await cloudDoRestore(tutName.value.trim(), tutSecret.value.trim(), function (t) { tutMsg.textContent = t; });
+      const ok = await withCloudAction(()=>cloudDoRestore(tutName.value.trim(), tutSecret.value.trim(), function (t) { tutMsg.textContent = t; }));
       if (ok) setTimeout(tutClose, 1600);
     });
     tutOverlay.addEventListener('keydown',function(e){
@@ -3095,7 +3141,7 @@
 
     // 起動時：はじめての人にだけ自動で出す（既存のプレイヤーには出さない）
     if (!tutSeen() && save.charges === 0 && dexOwnedCount(save) === 0) {
-      setTimeout(tutOpen, 700);
+      setTimeout(()=>{ if(mode==='idle' && !tutSeen()) tutOpen(); },700);
     } else if (!tutSeen()) {
       tutDone(); // すでに遊んでいる人は「見たこと」にして二度と自動では出さない
     }
@@ -3105,13 +3151,18 @@
       if (!window.CloudSync || !CloudSync.enabled()) return;
       const cred = CloudSync.getCred();
       if (!cred) return;
+      const before=JSON.stringify(save);
       const remote = await CloudSync.pull(cred.nickname, cred.secretHash);
-      if (!remote) return;
+      // 通信待ちの間に遊んだ記録を古いクラウド記録で上書きしない。
+      if (!remote || JSON.stringify(save)!==before) return;
       const localAt = save._syncedAt || '';
       const remoteAt = remote._syncedAt || '';
       if (remoteAt && remoteAt > localAt) {
-        localStorage.setItem(SAVE_KEY, JSON.stringify(remote));
+        try { localStorage.setItem(SAVE_KEY, JSON.stringify(remote)); } catch(e) { return; }
         loadSave();
+        CloudSync.adopt(save);
+        updateSoundUI();
+        if(!save.sound) { stopBgm(); if(audioCtx) audioCtx.suspend().catch(()=>{}); }
         updateStatusChips();
         updateDailyHint();
         renderPandaOutfit();
@@ -3138,10 +3189,7 @@
       lastTouchEnd = now;
     }, { passive: false });
 
-    // ピンチズーム抑止（アプリ内ブラウザ・Safari対策。ダブルタップズームはviewport設定で無効化）
-    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
-      document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
-    });
+    // ピンチ拡大は許可する。連打部分のダブルタップだけを上で抑止する。
 
     applyTimeTheme();
     setPercent(0);
@@ -3150,7 +3198,7 @@
     renderPandaOutfit();
     // 起動時：あいことば設定済みなら、クラウドの新しい記録を取りに行く
     // （cloud-sync.js はこの下で読み込まれるので、load後に実行してCloudSync未定義を避ける）
-    window.addEventListener('load', function () { maybeSyncFromCloud(); });
+    window.addEventListener('load', function () { maybeSyncFromCloud().catch(()=>{}); });
   </script>
   <script src="profile-share.js"></script>
   <script src="cloud-sync.js"></script>

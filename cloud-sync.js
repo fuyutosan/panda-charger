@@ -34,58 +34,94 @@ window.CloudSync = (function () {
   function clearCred() { localStorage.removeItem(CRED_KEY); }
 
   async function rpc(fn, body) {
-    const res = await fetch(CLOUD_CONFIG.url + '/rest/v1/rpc/' + fn, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': CLOUD_CONFIG.anonKey,
-        'Authorization': 'Bearer ' + CLOUD_CONFIG.anonKey
-      },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error('rpc ' + fn + ' ' + res.status);
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(CLOUD_CONFIG.url + '/rest/v1/rpc/' + fn, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CLOUD_CONFIG.anonKey,
+          'Authorization': 'Bearer ' + CLOUD_CONFIG.anonKey
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error('rpc ' + fn + ' ' + res.status);
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    } finally { clearTimeout(timeout); }
   }
 
   // ---- 保存（1.5秒デバウンスでまとめて送る） ----
   let pushTimer = null;
   let lastData = null;
+  let pushChain = Promise.resolve();
+  let epoch = 0;
+  let paused = false;
   function schedulePush(saveObj) {
     lastData = saveObj;          // 最新の記録は常に保持しておく
+    if (paused) return;
     if (!enabled()) return;
     if (!getCred()) return;      // あいことば未設定なら送信はしない
     if (pushTimer) clearTimeout(pushTimer);
-    pushTimer = setTimeout(pushNow, 1500);
+    pushTimer = setTimeout(() => { pushNow().catch(() => {}); }, 1500);
   }
-  async function pushNow(dataObj) {
-    if (!enabled()) return;
+  function pushNow(dataObj) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
     const cred = getCred();
     if (dataObj) lastData = dataObj;
-    if (!cred || !lastData) return;
-    try {
-      lastData._syncedAt = new Date().toISOString(); // last-write-wins 用の目印
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lastData)); // _syncedAtをローカルにも反映
+    if (!enabled() || !cred || !lastData) return Promise.reject(new Error('save unavailable'));
+    const source = lastData, ticket = epoch;
+    const snapshot = JSON.parse(JSON.stringify(source));
+    const job = pushChain.then(async () => {
+      if (ticket !== epoch) throw new Error('save superseded');
+      snapshot._syncedAt = new Date().toISOString();
       await rpc('save_game', {
         p_app: CLOUD_CONFIG.app,
         p_nickname: cred.nickname,
         p_secret_hash: cred.secretHash,
-        p_data: lastData
+        p_data: snapshot
       });
-    } catch (e) { /* ローカルは生きているので黙って諦める（次の保存で再送される） */ }
+      // 成功した保存だけを同期済みとする。通信中のプレイ結果は保持する。
+      if (ticket === epoch && source === lastData) {
+        source._syncedAt = snapshot._syncedAt;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(source)); } catch (_) {}
+      }
+    });
+    // 古いリクエストが遅れて新しい記録を上書きしないよう、順番に送る。
+    pushChain = job.catch(() => {});
+    return job;
+  }
+  function adopt(dataObj) {
+    paused = false;
+    epoch++;
+    clearTimeout(pushTimer);
+    pushTimer = null;
+    lastData = dataObj;
+  }
+  function pause() {
+    paused = true;
+    epoch++;
+    clearTimeout(pushTimer);
+    pushTimer = null;
+    return pushChain;
+  }
+  function resume(dataObj) {
+    paused = false;
+    schedulePush(dataObj || lastData);
   }
 
   // ---- 読み込み（名前＋あいことばが合った記録を返す。無ければnull） ----
   async function pull(nickname, secretHash) {
     if (!enabled()) return null;
-    try {
-      const data = await rpc('load_game', {
-        p_app: CLOUD_CONFIG.app,
-        p_nickname: nickname,
-        p_secret_hash: secretHash
-      });
-      return data || null;
-    } catch (e) { return null; }
+    const data = await rpc('load_game', {
+      p_app: CLOUD_CONFIG.app,
+      p_nickname: nickname,
+      p_secret_hash: secretHash
+    });
+    return data || null;
   }
 
   return {
@@ -96,6 +132,9 @@ window.CloudSync = (function () {
     clearCred: clearCred,
     schedulePush: schedulePush,
     pushNow: pushNow,
+    adopt: adopt,
+    pause: pause,
+    resume: resume,
     pull: pull,
     config: CLOUD_CONFIG
   };
