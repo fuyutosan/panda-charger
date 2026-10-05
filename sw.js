@@ -1,6 +1,6 @@
 // パンダさんパワー充電器 — オフライン対応サービスワーカー
 // v2: index.html はネットワーク優先（更新が即届く）、失敗時だけキャッシュ
-const CACHE = 'pp-charger-v27';
+const CACHE = 'pp-charger-v28';
 const ASSETS = [
   './',
   './index.html',
